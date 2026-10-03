@@ -3,14 +3,14 @@ export const SITE = {
   name: 'Protocloud Gear',
   tagline: 'Honest picks for laptops, keyboards and the gadgets on your desk',
   description:
-    'Tech gadget reviews and buying guides from the Protocloud Solutions team. Best laptops, keyboards, monitors and desk gear, tested by engineers who use them all day.',
+    'Tech gadget reviews and buying guides. Best laptops, keyboards, monitors and desk gear, tested by engineers who use them all day.',
   url: 'https://blog.protocloudsolutions.com',
-  parentName: 'Protocloud Solutions',
-  parentUrl: 'https://protocloudsolutions.com',
+  // Legal operator, shown only in the privacy policy and copyright line.
+  legalName: 'Protocloud Solutions',
   locale: 'en_US',
-  author: 'Protocloud Solutions',
-  email: 'hello@protocloudsolutions.com',
-  twitter: '@protocloud',
+  author: 'Protocloud Gear',
+  email: 'hello@protocloudgear.com', // change to the inbox you actually monitor
+  twitter: '@protocloudgear',
   ogImage: '/images/og-default.png',
 };
 

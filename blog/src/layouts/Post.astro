@@ -22,8 +22,8 @@ const jsonLd = [
     image: new URL(heroImage ?? SITE.ogImage, Astro.site).toString(),
     datePublished: pubDate.toISOString(),
     dateModified: (updatedDate ?? pubDate).toISOString(),
-    author: { '@type': 'Organization', name: SITE.author, url: SITE.parentUrl },
-    publisher: { '@type': 'Organization', name: SITE.parentName, url: SITE.parentUrl, logo: { '@type': 'ImageObject', url: `${SITE.parentUrl}/logo-black.png` } },
+    author: { '@type': 'Organization', name: SITE.author, url: SITE.url },
+    publisher: { '@type': 'Organization', name: SITE.name, url: SITE.url, logo: { '@type': 'ImageObject', url: `${SITE.url}/favicon.svg` } },
     mainEntityOfPage: url,
   },
   {
@@ -47,7 +47,7 @@ const jsonLd = [
       <h1 class="text-3xl font-semibold tracking-tight md:text-5xl md:leading-[1.1]">{title}</h1>
       <p class="mt-4 text-lg text-fg-muted">{description}</p>
       <div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-fg-muted">
-        <span>By <a href="/about" class="text-fg hover:text-primary">{SITE.author}</a></span>
+        <span>By <a href="/about" class="text-fg hover:text-primary">the {SITE.name} team</a></span>
         <span>Published <FormattedDate date={pubDate} /></span>
         {updatedDate && <span>Updated <FormattedDate date={updatedDate} /></span>}
       </div>
