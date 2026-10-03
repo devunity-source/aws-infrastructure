@@ -11,7 +11,7 @@ const slotId = ADSENSE.SLOTS[slot];
 ---
 {configured ? (
   <div class={`ad-slot ${cls}`}>
-    {label && <p class="px-2 pt-1 text-[10px] uppercase tracking-wider text-fg-muted/60">Advertisement</p>}
+    {label && <p class="px-2 pt-1 text-[10px] uppercase tracking-wider text-fg-muted/70">Advertisement</p>}
     <ins
       class="adsbygoogle"
       style="display:block"
@@ -25,6 +25,6 @@ const slotId = ADSENSE.SLOTS[slot];
   </div>
 ) : (
   <div class={`ad-slot grid place-items-center ${cls}`} aria-hidden="true">
-    <p class="text-xs text-fg-muted/60">Ad slot “{slot}” (set your AdSense publisher ID in src/lib/site.ts)</p>
+    <p class="text-xs text-fg-muted/70">Ad slot “{slot}” (set your AdSense publisher ID in src/lib/site.ts)</p>
   </div>
 )}

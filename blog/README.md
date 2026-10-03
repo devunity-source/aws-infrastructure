@@ -2,7 +2,7 @@
 
 Tech gadget blog for Protocloud Solutions, monetised with Google AdSense and Amazon affiliate links.
 Static site built with [Astro](https://astro.build), Tailwind CSS 4 and MDX. Theme tokens are lifted
-from protocloudsolutions.com (navy `hsl(222 47% 6%)`, blue `hsl(217 91% 60%)`, cyan accent, Space Grotesk).
+from protocloudsolutions.com (blue `hsl(217 91% 54%)` and cyan accents on a white surface, Space Grotesk).
 
 Served at `https://blog.protocloudsolutions.com` from the same nginx box as the main site.
 
