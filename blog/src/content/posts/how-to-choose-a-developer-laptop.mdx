@@ -1,0 +1,90 @@
+---
+title: "How to Choose a Developer Laptop: The Specs That Matter and the Ones That Don't"
+description: "A plain-language guide to CPU cores, memory, storage, displays and ports for people who write software. Read this before you read any ranked list."
+pubDate: 2026-08-13
+category: laptops
+tags: [developers, explainer, specs, buying-guide]
+---
+import AdSlot from '../../components/AdSlot.astro';
+
+Spec sheets are written to sell, not to inform. This is the version we give new hires when they ask what to buy. No rankings, no models. Just what each number means for someone who compiles code, runs containers and sits on video calls. When you are done, our [ranked laptop picks](/best-laptops-for-developers) will make a lot more sense.
+
+## Memory is the decision you cannot undo
+
+Almost every thin laptop now solders memory to the board. Whatever you buy at checkout is what you have for the life of the machine.
+
+**16 GB** runs an editor, a browser, a terminal and a container or two. It feels fine for the first year.
+
+**32 GB** is where we tell most engineers to land. A local Kubernetes cluster, a database, a browser with forty tabs, a language server for a big monorepo and a video call will all coexist without swapping.
+
+**64 GB and up** is for people who run local language models, multiple virtual machines, or large data workloads. If you have to ask, you do not need it yet.
+
+Memory is also the spec that laptop makers mark up the most. Pay it anyway. Nobody has ever regretted the extra 16 GB in year three.
+
+## CPU: cores are not the headline
+
+For most development work, single-core speed matters more than core count. Your editor, your language server, your browser and most of your build are waiting on one fast thread at a time. The parallel parts, like compiling many files or running a test suite, do scale with cores, but a chip with eight fast cores beats one with sixteen slow ones for the average day.
+
+The other thing that matters is sustained performance. Many thin laptops can run fast for thirty seconds and then throttle to stay cool. A long build on one of those machines takes twice as long as the benchmark suggests. Reviews that run a twenty-minute compile loop tell you more than any synthetic score.
+
+Apple's M-series chips lead on both counts, with the caveat that you get macOS. AMD and Intel have closed the gap on sustained performance, less so on battery.
+
+<AdSlot slot="inArticle" format="fluid" layout="in-article" />
+
+## Storage: fast is standard, big is optional
+
+Every laptop worth buying ships an NVMe SSD, and the differences between them are invisible outside of benchmarks. Size is the question.
+
+Container images, node_modules folders, language toolchains and a few virtual machines add up fast. 512 GB is a workable minimum if you are disciplined about pruning. 1 TB means you stop thinking about it. Like memory, storage is often soldered, so decide now.
+
+## Display: resolution, ratio, and brightness
+
+**Pixel density** around 160 pixels per inch and above makes small code fonts crisp. A 14-inch panel at 2880 by 1800 or a 13-inch at 2560 by 1600 both clear that bar. A 15-inch at 1920 by 1080 does not, and you will notice.
+
+**Aspect ratio** matters more than people think. 16:10 and 3:2 panels are taller than 16:9 at the same width, which means more lines of code and less scrolling. Almost every good laptop has moved to 16:10.
+
+**Brightness** of 400 nits or more lets you work near a window. OLED looks stunning and makes dark editor themes genuinely black, at a cost of an hour or so of battery and a small risk of burn-in on static UI over many years.
+
+Refresh rate above 60 Hz makes scrolling smoother. Nice, not essential.
+
+## Ports: count the ones you will use
+
+Two USB-C ports with Thunderbolt or USB4 is the minimum. It lets you charge on one side and dock on the other. HDMI saves you an adapter in every meeting room. An SD slot matters to about three people. USB-A is still useful for the YubiKey and the one old peripheral everyone owns.
+
+Check the charging wattage the laptop accepts over USB-C. A big machine that needs 140 W will slowly drain on a 65 W dock during a build.
+
+## Battery: trust the reviews, not the box
+
+Manufacturers quote battery life from a video playback loop at low brightness. Development work is not that. A realistic figure is half to two thirds of the claim. Apple machines are the exception and often get close to the number on the box.
+
+If you work away from power, this is the spec where the Mac advantage is largest. If you sit at a desk with a dock, it hardly matters.
+
+## Keyboard and trackpad: try before you buy
+
+You will press these keys millions of times. Key travel, stability and layout are personal, and no spec sheet captures them. If at all possible, type on the laptop in a shop. Pay attention to the arrow keys, because half-height arrows are a daily annoyance, and to whether the Function and Control keys are where your hands expect them.
+
+Trackpads range from Apple's glass, which is the standard, to plastic pads that register your palm as a click. A good trackpad reduces how often you reach for the mouse.
+
+## Operating system is a lifestyle choice
+
+macOS gives you a Unix shell, the best hardware integration, and the best battery life, at a premium and with no upgrade path. Windows gives you the widest hardware choice and WSL2, which is a real Linux kernel, good enough for most backend work. Linux native gives you the fewest surprises in production parity and the most time spent on drivers, unless you buy a laptop certified for it.
+
+None of these is wrong. Pick the one your team uses, or the one you will not fight.
+
+## Things that do not matter much
+
+- Discrete GPUs, unless you do machine learning or graphics work. They cost battery and weight for nothing otherwise.
+- Fingerprint versus face unlock. Both work.
+- Speakers. You will wear headphones.
+- The NPU and anything marketed with "AI" in the name. Useful for a few OS features, irrelevant to compiling code today.
+
+## The checklist
+
+1. 32 GB of memory, or 16 GB if the budget truly cannot stretch.
+2. A chip reviewed for sustained performance, not a benchmark peak.
+3. 1 TB of storage if you can, 512 GB if you must.
+4. A 16:10 or 3:2 display with at least 160 ppi and 400 nits.
+5. Two Thunderbolt or USB4 ports and a charging wattage that matches the machine.
+6. A keyboard you have typed on.
+
+Everything else is preference.

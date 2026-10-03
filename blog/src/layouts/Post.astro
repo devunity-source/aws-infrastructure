@@ -1,0 +1,126 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Base from './Base.astro';
+import AdSlot from '../components/AdSlot.astro';
+import PostCard from '../components/PostCard.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { AFFILIATE, CATEGORIES, SITE } from '../lib/site';
+
+interface Props { post: CollectionEntry<'posts'>; related: CollectionEntry<'posts'>[]; headings: { depth: number; slug: string; text: string }[] }
+const { post, related, headings } = Astro.props;
+const { title, description, pubDate, updatedDate, category, tags, heroImage, heroAlt, products } = post.data;
+const toc = headings.filter((h) => h.depth === 2);
+const url = new URL(`/${post.id}`, Astro.site).toString();
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: title,
+    description,
+    image: new URL(heroImage ?? SITE.ogImage, Astro.site).toString(),
+    datePublished: pubDate.toISOString(),
+    dateModified: (updatedDate ?? pubDate).toISOString(),
+    author: { '@type': 'Organization', name: SITE.author, url: SITE.parentUrl },
+    publisher: { '@type': 'Organization', name: SITE.parentName, url: SITE.parentUrl, logo: { '@type': 'ImageObject', url: `${SITE.parentUrl}/logo-black.png` } },
+    mainEntityOfPage: url,
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url },
+      { '@type': 'ListItem', position: 2, name: CATEGORIES[category].label, item: `${SITE.url}/category/${category}` },
+      { '@type': 'ListItem', position: 3, name: title, item: url },
+    ],
+  },
+];
+---
+<Base title={title} description={description} image={heroImage} type="article" publishedTime={pubDate} modifiedTime={updatedDate} jsonLd={jsonLd}>
+  <article class="mx-auto max-w-6xl px-4 pt-10">
+    <nav aria-label="Breadcrumb" class="text-xs text-fg-muted">
+      <a href="/" class="hover:text-fg">Home</a> <span class="mx-1.5">/</span>
+      <a href={`/category/${category}`} class="hover:text-fg">{CATEGORIES[category].label}</a>
+    </nav>
+    <header class="mt-4 max-w-3xl">
+      <h1 class="text-3xl font-semibold tracking-tight md:text-5xl md:leading-[1.1]">{title}</h1>
+      <p class="mt-4 text-lg text-fg-muted">{description}</p>
+      <div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-fg-muted">
+        <span>By <a href="/about" class="text-fg hover:text-primary">{SITE.author}</a></span>
+        <span>Published <FormattedDate date={pubDate} /></span>
+        {updatedDate && <span>Updated <FormattedDate date={updatedDate} /></span>}
+      </div>
+    </header>
+
+    {heroImage && (
+      <img src={heroImage} alt={heroAlt ?? ''} width="1200" height="630" class="mt-8 aspect-[2/1] w-full rounded-2xl border border-line object-cover" />
+    )}
+
+    <p class="glass mt-8 rounded-xl px-4 py-3 text-xs text-fg-muted">{AFFILIATE.DISCLOSURE} <a href="/disclosure" class="text-fg hover:text-primary">How we make money.</a></p>
+
+    <div class="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div class="min-w-0">
+        {toc.length > 2 && (
+          <nav class="glass mb-10 rounded-2xl p-5" aria-label="Table of contents">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-fg-muted">In this guide</h2>
+            <ol class="mt-3 grid gap-1.5 text-sm sm:grid-cols-2">
+              {toc.map((h) => <li><a href={`#${h.slug}`} class="text-fg-muted hover:text-primary">{h.text}</a></li>)}
+            </ol>
+          </nav>
+        )}
+
+        {products.length > 0 && (
+          <section class="glass mb-10 overflow-hidden rounded-2xl">
+            <h2 class="border-b border-line px-5 py-3 text-xs font-semibold uppercase tracking-wider text-fg-muted">Our picks at a glance</h2>
+            <ul class="divide-y divide-line">
+              {products.map((p, i) => (
+                <li class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 px-5 py-3 text-sm">
+                  <span><span class="mr-2 text-fg-muted">#{i + 1}</span><a href={`#${p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} class="font-medium text-fg hover:text-primary">{p.name}</a></span>
+                  <span class="ml-auto shrink-0 rounded-md bg-primary/15 px-2 py-0.5 text-xs text-primary">{p.pick}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <div class="prose-pc">
+          <slot />
+        </div>
+
+        <AdSlot slot="inArticle" format="fluid" layout="in-article" class="mt-12" />
+
+        {tags.length > 0 && (
+          <ul class="mt-10 flex flex-wrap gap-2" aria-label="Tags">
+            {tags.map((t) => <li><a href={`/tags/${t}`} class="rounded-md border border-line bg-muted px-2.5 py-1 text-xs text-fg-muted hover:text-fg">#{t}</a></li>)}
+          </ul>
+        )}
+
+        <div class="mt-12"><Newsletter /></div>
+      </div>
+
+      <aside class="hidden lg:block">
+        <div class="sticky top-24 space-y-6">
+          <AdSlot slot="sidebar" format="auto" />
+          {related.length > 0 && (
+            <section class="glass rounded-2xl p-5">
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-fg-muted">More in {CATEGORIES[category].label}</h2>
+              <ul class="mt-3 space-y-3 text-sm">
+                {related.map((r) => <li><a href={`/${r.id}`} class="text-fg-muted hover:text-primary">{r.data.title}</a></li>)}
+              </ul>
+            </section>
+          )}
+        </div>
+      </aside>
+    </div>
+
+    {related.length > 0 && (
+      <section class="mt-20">
+        <h2 class="text-2xl font-semibold tracking-tight">Keep reading</h2>
+        <div class="mt-6 grid gap-6 md:grid-cols-3">
+          {related.slice(0, 3).map((r) => <PostCard post={r} />)}
+        </div>
+      </section>
+    )}
+  </article>
+</Base>

@@ -1,0 +1,37 @@
+---
+import { amazonUrl } from '../lib/site';
+interface Props { name: string; pick: string; asin?: string; specs?: string[]; pros?: string[]; cons?: string[]; index?: number }
+const { name, pick, asin, specs = [], pros = [], cons = [], index } = Astro.props;
+const href = amazonUrl(asin || name);
+---
+<article class="glass not-prose my-8 rounded-2xl p-5 md:p-6" id={name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}>
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <span class="inline-flex items-center gap-1.5 rounded-md bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
+        {typeof index === 'number' && <span class="text-primary/70">#{index + 1}</span>} {pick}
+      </span>
+      <h3 class="mt-2 text-xl font-semibold tracking-tight text-fg">{name}</h3>
+    </div>
+    <a href={href} target="_blank" rel="nofollow sponsored noopener" class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-fg hover:bg-primary/90">
+      Check price on Amazon
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
+    </a>
+  </div>
+  {specs.length > 0 && (
+    <ul class="mt-4 flex flex-wrap gap-2">
+      {specs.map((s) => <li class="rounded-md border border-line bg-muted px-2.5 py-1 text-xs text-fg-muted">{s}</li>)}
+    </ul>
+  )}
+  {(pros.length > 0 || cons.length > 0) && (
+    <div class="mt-5 grid gap-4 sm:grid-cols-2">
+      <div>
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-ok">Pros</h4>
+        <ul class="mt-2 space-y-1.5 text-sm text-fg-muted">{pros.map((p) => <li class="flex gap-2"><span class="text-ok">+</span><span>{p}</span></li>)}</ul>
+      </div>
+      <div>
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-warn">Cons</h4>
+        <ul class="mt-2 space-y-1.5 text-sm text-fg-muted">{cons.map((c) => <li class="flex gap-2"><span class="text-warn">–</span><span>{c}</span></li>)}</ul>
+      </div>
+    </div>
+  )}
+</article>

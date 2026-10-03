@@ -1,0 +1,10 @@
+---
+import Page from '../layouts/Page.astro';
+import { SITE } from '../lib/site';
+---
+<Page title="Contact" description="Corrections, questions, or a product you think we should test.">
+  <p>Email is the fastest way to reach us: <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
+  <p>For cloud infrastructure, Kubernetes or DevOps consulting enquiries, head to <a href={SITE.parentUrl}>{SITE.parentName}</a> and book a meeting there.</p>
+  <h2>Review requests</h2>
+  <p>We are happy to look at hardware that fits the site. Loaned units are returned, we keep editorial control, and we disclose the loan in the article. Paid placements are not available.</p>
+</Page>

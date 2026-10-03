@@ -1,0 +1,13 @@
+---
+import { SITE } from '../lib/site';
+---
+<section class="glass rounded-2xl p-6 md:p-8">
+  <h3 class="text-xl font-semibold tracking-tight">New guides, no spam</h3>
+  <p class="mt-2 text-sm text-fg-muted">One email when we publish something worth your time. Unsubscribe in one click.</p>
+  <!-- Point this form at your email provider (Resend, Buttondown, Mailchimp). It posts to a mailto fallback until you do. -->
+  <form class="mt-4 flex flex-col gap-2 sm:flex-row" action={`mailto:${SITE.email}?subject=Subscribe`} method="post" enctype="text/plain">
+    <label class="sr-only" for="nl-email">Email address</label>
+    <input id="nl-email" name="email" type="email" required placeholder="you@company.com" class="flex-1 rounded-md border border-line bg-bg px-3 py-2 text-sm text-fg placeholder:text-fg-muted/60 focus:border-primary focus:outline-none" />
+    <button type="submit" class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-fg hover:bg-primary/90">Subscribe</button>
+  </form>
+</section>

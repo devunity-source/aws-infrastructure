@@ -1,0 +1,79 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+/* Tokens lifted from protocloudsolutions.com so the blog reads as the same brand. */
+@theme {
+  --font-sans: 'Space Grotesk', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: Menlo, ui-monospace, monospace;
+
+  --color-bg: hsl(222 47% 6%);
+  --color-card: hsl(222 47% 10%);
+  --color-muted: hsl(222 47% 12%);
+  --color-line: hsl(222 47% 18%);
+  --color-fg: hsl(210 40% 96%);
+  --color-fg-muted: hsl(215 20% 65%);
+  --color-primary: hsl(217 91% 60%);
+  --color-primary-fg: hsl(210 40% 96%);
+  --color-accent: hsl(199 89% 48%);
+  --color-warn: hsl(28 74% 54%);
+  --color-ok: hsl(142 71% 45%);
+
+  --radius-md: 0.5rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-bg text-fg font-sans antialiased;
+  background-image:
+    radial-gradient(60rem 30rem at 80% -10%, hsl(217 91% 60% / 0.12), transparent 60%),
+    radial-gradient(40rem 20rem at -10% 20%, hsl(199 89% 48% / 0.08), transparent 60%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: hsl(217 91% 60% / 0.35);
+}
+
+.glass {
+  @apply bg-card/80 border border-line backdrop-blur-md;
+}
+
+.elevate {
+  @apply transition-colors duration-150;
+}
+.elevate:hover {
+  background-color: hsl(222 47% 13%);
+  border-color: hsl(222 47% 24%);
+}
+
+/* Article body */
+.prose-pc {
+  @apply prose prose-invert max-w-none
+    prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-fg
+    prose-h2:mt-12 prose-h2:text-2xl md:prose-h2:text-3xl
+    prose-h3:text-xl
+    prose-p:text-fg-muted prose-p:leading-relaxed
+    prose-li:text-fg-muted
+    prose-strong:text-fg
+    prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+    prose-blockquote:border-l-primary prose-blockquote:text-fg-muted
+    prose-code:text-accent prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
+    prose-pre:bg-card prose-pre:border prose-pre:border-line
+    prose-th:text-fg prose-td:text-fg-muted prose-tr:border-line
+    prose-hr:border-line
+    prose-img:rounded-xl prose-img:border prose-img:border-line;
+}
+
+/* Reserve space so ads don't shift layout (Core Web Vitals). */
+.ad-slot {
+  @apply w-full overflow-hidden rounded-xl border border-dashed border-line bg-card/40;
+  min-height: 120px;
+}
+.ad-slot ins {
+  display: block;
+}

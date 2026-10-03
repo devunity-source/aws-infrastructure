@@ -1,0 +1,41 @@
+---
+import Logo from './Logo.astro';
+import { CATEGORIES, SITE } from '../lib/site';
+const year = new Date().getFullYear();
+---
+<footer class="mt-24 border-t border-line">
+  <div class="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-4">
+    <div class="md:col-span-2">
+      <Logo />
+      <p class="mt-4 max-w-sm text-sm leading-relaxed text-fg-muted">{SITE.tagline}. Written by the engineers at <a href={SITE.parentUrl} class="text-fg hover:text-primary">{SITE.parentName}</a>.</p>
+      <a href="/rss.xml" class="mt-4 inline-flex items-center gap-1.5 text-xs text-fg-muted hover:text-fg">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="19" r="2"/><path d="M3 10a11 11 0 0 1 11 11h-3a8 8 0 0 0-8-8v-3Zm0-7a18 18 0 0 1 18 18h-3A15 15 0 0 0 3 6V3Z"/></svg>
+        RSS feed
+      </a>
+    </div>
+    <div>
+      <h3 class="text-xs font-semibold uppercase tracking-wider text-fg-muted">Categories</h3>
+      <ul class="mt-3 space-y-2 text-sm">
+        {Object.entries(CATEGORIES).map(([k, v]) => (
+          <li><a href={`/category/${k}`} class="text-fg-muted hover:text-fg">{v.label}</a></li>
+        ))}
+      </ul>
+    </div>
+    <div>
+      <h3 class="text-xs font-semibold uppercase tracking-wider text-fg-muted">Company</h3>
+      <ul class="mt-3 space-y-2 text-sm">
+        <li><a href="/about" class="text-fg-muted hover:text-fg">About & how we test</a></li>
+        <li><a href="/contact" class="text-fg-muted hover:text-fg">Contact</a></li>
+        <li><a href="/privacy" class="text-fg-muted hover:text-fg">Privacy policy</a></li>
+        <li><a href="/disclosure" class="text-fg-muted hover:text-fg">Affiliate disclosure</a></li>
+        <li><a href={SITE.parentUrl} class="text-fg-muted hover:text-fg">Protocloud Solutions</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="border-t border-line">
+    <div class="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-5 text-xs text-fg-muted sm:flex-row sm:items-center sm:justify-between">
+      <span>© {year} {SITE.parentName}. All rights reserved.</span>
+      <span>As an Amazon Associate we earn from qualifying purchases.</span>
+    </div>
+  </div>
+</footer>
