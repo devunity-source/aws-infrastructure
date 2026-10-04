@@ -30,6 +30,8 @@ npm run check      # type check
 
 ## Writing a post
 
+Full guide with field reference and checklist: [post_article.md](post_article.md).
+
 Add a file to `src/content/posts/`, for example `best-webcams.mdx`. The filename becomes the URL.
 
 ```mdx
