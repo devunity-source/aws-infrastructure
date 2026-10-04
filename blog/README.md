@@ -1,6 +1,6 @@
-# Protocloud Gear
+# Protocloud Reviews
 
-Standalone tech gadget blog (Protocloud Gear), monetised with Google AdSense and Amazon affiliate links.
+Standalone tech gadget blog (Protocloud Reviews), monetised with Google AdSense and Amazon affiliate links.
 Static site built with [Astro](https://astro.build), Tailwind CSS 4 and MDX. Theme tokens are lifted
 from protocloudsolutions.com (blue `hsl(217 91% 54%)` and cyan accents on a white surface, Space Grotesk).
 

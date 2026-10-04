@@ -44,5 +44,5 @@ terraform apply
 
 ## Blog
 
-`blog/` holds the Protocloud Gear tech blog (Astro static site, Google AdSense, Amazon affiliate).
+`blog/` holds the Protocloud Reviews tech blog (Astro static site, Google AdSense, Amazon affiliate).
 See [blog/README.md](blog/README.md) for setup, writing posts and deployment.

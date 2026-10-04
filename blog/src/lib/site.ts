@@ -1,6 +1,6 @@
 // Single place for everything you will want to change.
 export const SITE = {
-  name: 'Protocloud Gear',
+  name: 'Protocloud Reviews',
   tagline: 'Honest picks for laptops, keyboards and the gadgets on your desk',
   description:
     'Tech gadget reviews and buying guides. Best laptops, keyboards, monitors and desk gear, tested by engineers who use them all day.',
@@ -8,9 +8,9 @@ export const SITE = {
   // Legal operator, shown only in the privacy policy and copyright line.
   legalName: 'Protocloud Solutions',
   locale: 'en_US',
-  author: 'Protocloud Gear',
-  email: 'hello@protocloudgear.com', // change to the inbox you actually monitor
-  twitter: '@protocloudgear',
+  author: 'Protocloud Reviews',
+  email: 'hello@protocloudreviews.com', // change to the inbox you actually monitor
+  twitter: '@protocloudreviews',
   ogImage: '/images/og-default.png',
 };
 
@@ -32,7 +32,7 @@ export const ADSENSE = {
 export const AFFILIATE = {
   AMAZON_TAG: 'protocloud-20',
   DISCLOSURE:
-    'Protocloud Gear is reader-supported. When you buy through links on this page we may earn an affiliate commission at no extra cost to you.',
+    'Protocloud Reviews is reader-supported. When you buy through links on this page we may earn an affiliate commission at no extra cost to you.',
 };
 
 // Google Analytics / Tag Manager from the main site. Replace or blank out.

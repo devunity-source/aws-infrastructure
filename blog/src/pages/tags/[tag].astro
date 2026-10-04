@@ -11,7 +11,7 @@ export async function getStaticPaths() {
 const { tag } = Astro.params;
 const { posts } = Astro.props;
 ---
-<Base title={`#${tag}`} description={`Guides tagged ${tag} on Protocloud Gear.`} noindex>
+<Base title={`#${tag}`} description={`Guides tagged ${tag} on Protocloud Reviews.`} noindex>
   <section class="mx-auto max-w-6xl px-4 pt-14">
     <h1 class="text-4xl font-semibold tracking-tight">#{tag}</h1>
     <div class="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">{posts.map((p) => <PostCard post={p} />)}</div>
