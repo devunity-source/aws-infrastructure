@@ -3,7 +3,7 @@ export const SITE = {
   name: 'Protocloud Reviews',
   tagline: 'Honest picks for laptops, keyboards and the gadgets on your desk',
   description:
-    'Tech gadget reviews and buying guides. Best laptops, keyboards, monitors and desk gear, tested by engineers who use them all day.',
+    'Tech gadget reviews and buying guides. Best laptops, keyboards, monitors and desk accessories, tested by engineers who use them all day.',
   url: 'https://blog.protocloudsolutions.com',
   // Legal operator, shown only in the privacy policy and copyright line.
   legalName: 'Protocloud Solutions',
