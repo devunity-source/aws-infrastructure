@@ -91,7 +91,7 @@ Add an `A` record for `blog` pointing at the server's IP first so certbot can va
 
 ### Automatic on push
 
-`.github/workflows/deploy-blog.yml` builds and rsyncs on every push to `main` that touches `blog/`.
+`.github/workflows/deploy-protocloud-reviews.yml` builds and rsyncs on every push to `main` that touches `protocloud-reviews/`.
 Repository secrets it needs:
 
 - `BLOG_DEPLOY_HOST`: server hostname or IP

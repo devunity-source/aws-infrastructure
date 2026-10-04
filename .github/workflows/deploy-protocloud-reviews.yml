@@ -1,13 +1,13 @@
-name: Deploy blog
+name: Deploy Protocloud Reviews
 
 on:
   push:
     branches: [main]
-    paths: ['blog/**']
+    paths: ['protocloud-reviews/**']
   workflow_dispatch:
 
 concurrency:
-  group: deploy-blog
+  group: deploy-protocloud-reviews
   cancel-in-progress: true
 
 jobs:
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: blog
+        working-directory: protocloud-reviews
     steps:
       - uses: actions/checkout@v4
 
@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: blog/package-lock.json
+          cache-dependency-path: protocloud-reviews/package-lock.json
 
       - run: npm ci
       - run: npm run check
