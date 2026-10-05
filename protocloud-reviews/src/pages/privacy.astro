@@ -1,0 +1,30 @@
+---
+import Page from '../layouts/Page.astro';
+import { SITE } from '../lib/site';
+const updated = 'October 3, 2026';
+---
+<Page title="Privacy policy" description={`Last updated ${updated}.`}>
+  <p>This policy covers {SITE.url}, operated by {SITE.legalName}. It explains what data is collected when you visit, who collects it, and what you can do about it.</p>
+
+  <h2>What we collect directly</h2>
+  <p>Nothing you do not give us. There are no accounts. If you email us or subscribe to the newsletter we keep your email address for that purpose only and delete it on request.</p>
+
+  <h2>Analytics</h2>
+  <p>We use Google Analytics 4 and Google Tag Manager to understand which articles people read and on what kind of device. Google sets cookies for this. IP addresses are anonymised by Google Analytics 4 by default.</p>
+
+  <h2>Advertising</h2>
+  <p>We show ads served by Google AdSense. Google and its partners use cookies, including the DoubleClick cookie, to serve ads based on your prior visits to this and other websites. You can opt out of personalised advertising at <a href="https://www.google.com/settings/ads" rel="noopener">Google Ads Settings</a> or at <a href="https://www.aboutads.info/choices/" rel="noopener">aboutads.info</a>. Third-party vendors may also use cookies to serve ads; their use is governed by their own policies.</p>
+  <p>Visitors in the European Economic Area, the UK and Switzerland are shown a consent message before personalised ads load, as required by the Google EU User Consent Policy.</p>
+
+  <h2>Affiliate links</h2>
+  <p>Links to Amazon carry a tracking tag so Amazon can attribute a purchase to this site. Amazon's own cookie policy applies once you are on their site.</p>
+
+  <h2>Cookies</h2>
+  <p>You can block or delete cookies in your browser settings. The site works without them. Ads and analytics will not.</p>
+
+  <h2>Your rights</h2>
+  <p>Under GDPR, UK GDPR and CCPA you may ask what personal data we hold about you, ask us to delete it, or object to processing. Email <a href={`mailto:${SITE.email}`}>{SITE.email}</a>. We respond within 30 days.</p>
+
+  <h2>Changes</h2>
+  <p>We will update this page when anything material changes and revise the date at the top.</p>
+</Page>

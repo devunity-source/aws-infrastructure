@@ -1,0 +1,29 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PostCard from '../../components/PostCard.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import { CATEGORIES, type CategoryKey } from '../../lib/site';
+
+export async function getStaticPaths() {
+  return Object.keys(CATEGORIES).map((category) => ({ params: { category } }));
+}
+const category = Astro.params.category as CategoryKey;
+const meta = CATEGORIES[category];
+const posts = (await getCollection('posts', ({ data }) => !data.draft && data.category === category)).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+<Base title={`Best ${meta.label}`} description={`${meta.blurb} Buying guides and reviews from Protocloud Reviews.`}>
+  <section class="mx-auto max-w-6xl px-4 pt-14">
+    <p class="text-xs text-fg-muted"><a href="/" class="hover:text-fg">Home</a> <span class="mx-1.5">/</span> {meta.label}</p>
+    <h1 class="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">{meta.label}</h1>
+    <p class="mt-3 max-w-xl text-lg text-fg-muted">{meta.blurb}</p>
+    {posts.length === 0 ? (
+      <p class="glass mt-10 rounded-2xl p-8 text-fg-muted">Nothing here yet. First guide is in the works.</p>
+    ) : (
+      <div class="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {posts.map((p) => <PostCard post={p} />)}
+      </div>
+    )}
+    <AdSlot slot="footer" class="mt-10" />
+  </section>
+</Base>

@@ -41,3 +41,8 @@ terraform apply
 ## Security Notes
 - The security group currently allows SSH access from anywhere (0.0.0.0/0). Consider restricting this to your IP address for better security.
 - The load balancer is configured as public (internet-facing).
+
+## Protocloud Reviews
+
+`protocloud-reviews/` holds the Protocloud Reviews tech blog (Astro static site, Google AdSense, Amazon affiliate).
+See [protocloud-reviews/README.md](protocloud-reviews/README.md) for setup, writing posts and deployment.

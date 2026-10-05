@@ -1,0 +1,93 @@
+---
+title: "The Best Budget Laptops for Students and New Developers"
+description: "Five laptops that run a real development environment without a premium price, including the MacBook Air, two Windows ultrabooks and a Chromebook that handles Linux."
+pubDate: 2026-07-16
+category: laptops
+tags: [budget, students, macbook-air, chromebook, buying-guide]
+products:
+  - name: "Apple MacBook Air 13-inch (M4)"
+    pick: "Best overall"
+    specs: ["13.6-inch Liquid Retina", "16 GB base memory", "Fanless", "Around 18 hours battery claimed"]
+    pros: ["Silent, cool, all-day battery", "16 GB standard is enough for most coursework and side projects", "Holds resale value"]
+    cons: ["Storage upgrades are expensive", "Two ports only", "No Linux without compromise"]
+  - name: "Acer Swift Go 14"
+    pick: "Best Windows value"
+    specs: ["14-inch OLED option", "Intel Core Ultra", "16 GB", "Around 1.3 kg"]
+    pros: ["OLED at a price that used to buy a dim TN panel", "Solid keyboard", "Plenty of ports including HDMI"]
+    cons: ["Battery life is average", "Plastic chassis flexes a bit"]
+  - name: "Lenovo IdeaPad Slim 5"
+    pick: "Best for Linux on a budget"
+    specs: ["14 or 16-inch, OLED option", "AMD Ryzen", "16 GB", "Good Linux hardware support"]
+    pros: ["AMD graphics and Wi-Fi work with mainstream distros", "Comfortable keyboard", "Upgradeable SSD"]
+    cons: ["Soldered RAM on most configs", "Speakers are weak"]
+  - name: "Framework Laptop 13 (base configuration)"
+    pick: "Best long-term value"
+    specs: ["13.5-inch 3:2 display", "AMD or Intel mainboard", "User-replaceable everything", "Pick your own ports"]
+    pros: ["Buy cheap now, upgrade RAM and storage yourself later", "Mainboard swap instead of a new laptop", "Repair guides for every part"]
+    cons: ["Base price is higher than the Acer or Lenovo", "Battery life is ordinary"]
+  - name: "Lenovo Chromebook Plus 14"
+    pick: "Best Chromebook for coding"
+    specs: ["14-inch 2K OLED", "MediaTek Kompanio Ultra", "Up to 16 GB", "Linux container built in"]
+    pros: ["Very long battery", "Linux development container is a terminal command away", "Silent and light"]
+    cons: ["Arm only, so some tooling needs workarounds", "Not for heavy local containers", "Chrome OS limits"]
+---
+import ProductCard from '../../components/ProductCard.astro';
+import AdSlot from '../../components/AdSlot.astro';
+
+You do not need a premium laptop to learn to code or to do most of a computer science degree. You need a decent keyboard, 16 GB of memory, a screen you can stare at for hours, and a battery that lasts a day of lectures. That is a shorter list than laptop makers would like you to believe. These five hit it without emptying a student loan.
+
+## The floor, not the ceiling
+
+Three things we would not go below in 2026.
+
+**16 GB of memory.** 8 GB is still sold and it is a trap. A browser, an editor and a single Docker container will fill it. Several machines here solder the memory, so this is a buy-time decision.
+
+**256 GB of fast storage, preferably 512.** Toolchains and project dependencies are large. If a laptop lets you swap the SSD yourself, 256 GB is acceptable because you can fix it later for cheap.
+
+**A keyboard you can type on for hours.** This is where budget laptops cut corners. Shallow, mushy keys cost you more in a year than the money they saved.
+
+A discrete GPU is not on the list. Neither is a touchscreen or a 4K panel.
+
+<ProductCard index={0} {...frontmatter.products[0]} />
+
+The MacBook Air is the budget pick for a reason that surprises people: the base model is now a genuinely good developer machine. 16 GB of memory as standard, a fanless design that stays silent through a build, and battery life that gets through a full day with margin. The keyboard and trackpad are better than anything else at the price.
+
+Storage upgrades are overpriced, and there are only two USB-C ports, so budget for a small hub. If your course requires Linux natively or Windows-only software, this is not the machine. For web, mobile, data and most general programming, it is the one we point students to first. The previous M3 generation is often discounted and nearly as good.
+
+<ProductCard index={1} {...frontmatter.products[1]} />
+
+Acer's Swift Go 14 is the Windows laptop that gives you the most for the money. An OLED panel at this price was unthinkable a few years ago. The Core Ultra chip handles compilers and virtual machines without drama, the keyboard is better than the price suggests, and it has real ports: HDMI, USB-A, and two USB-C.
+
+Battery is a working day if you manage brightness, not more. The chassis is plastic and flexes if you pick it up by a corner. Neither matters much at a desk.
+
+<AdSlot slot="inArticle" format="fluid" layout="in-article" />
+
+<ProductCard index={2} {...frontmatter.products[2]} />
+
+The IdeaPad Slim 5 is our Linux pick at this price because of what is inside. AMD processors and graphics and the Wi-Fi card Lenovo uses are all well supported by mainstream distributions, so Ubuntu or Fedora installs cleanly. The SSD is replaceable. The keyboard is comfortable and the OLED option is good.
+
+Most configurations solder the memory, so get 16 GB at purchase. The speakers are forgettable. It is a quiet, sensible machine that stays out of your way.
+
+<ProductCard index={3} {...frontmatter.products[3]} />
+
+The Framework costs more up front than the Acer or the Lenovo, and it is on this list anyway because of what happens in year two and three. Buy the base configuration with modest memory and storage, then upgrade both yourself when you have the money, using standard parts. When the processor feels slow, swap the mainboard rather than the laptop.
+
+For a student who will keep a machine through a degree and into a first job, the total cost ends up lower than buying a cheap laptop and replacing it. Battery life is ordinary and the base model is not the cheapest thing here. It is the most honest.
+
+<ProductCard index={4} {...frontmatter.products[4]} />
+
+Chromebooks are not toys any more. The Chromebook Plus 14 has a 2K OLED screen, exceptional battery life, and a built-in Linux container that gives you a real Debian environment with a terminal, a package manager and VS Code in about two minutes.
+
+The limits are real. The processor is Arm, so some tooling needs an Arm build or a workaround. Heavy local container work and anything that needs a lot of memory will struggle. For a first year of programming, web development, scripting and a lot of note-taking, it is a lovely, light, cheap machine.
+
+## Refurbished is not a compromise
+
+A refurbished MacBook or ThinkPad from the manufacturer's own outlet, one or two generations old, often beats a new budget laptop on keyboard, screen and build. Check the battery cycle count and buy from a seller with a warranty.
+
+## The short version
+
+- Just want it to work for years: MacBook Air M4.
+- Windows and a great screen for the money: Acer Swift Go 14.
+- Linux without driver hunting: Lenovo IdeaPad Slim 5.
+- Upgrade it yourself later: Framework Laptop 13.
+- Lightest and longest battery, light workloads: Lenovo Chromebook Plus 14.

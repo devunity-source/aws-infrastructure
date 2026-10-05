@@ -1,0 +1,31 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { CATEGORIES } from '../lib/site';
+import FormattedDate from './FormattedDate.astro';
+interface Props { post: CollectionEntry<'posts'>; large?: boolean }
+const { post, large = false } = Astro.props;
+const { title, description, pubDate, category, heroImage, heroAlt } = post.data;
+const href = `/${post.id}`;
+---
+<article class:list={['glass elevate group flex flex-col overflow-hidden rounded-2xl', large && 'md:flex-row']}>
+  <a href={href} class:list={['block overflow-hidden bg-muted', large ? 'md:w-1/2' : 'aspect-[16/9]']} tabindex="-1" aria-hidden="true">
+    {heroImage ? (
+      <img src={heroImage} alt={heroAlt ?? ''} loading="lazy" decoding="async" width="800" height="450" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
+    ) : (
+      <div class="grid h-full min-h-40 w-full place-items-center bg-[radial-gradient(circle_at_30%_30%,hsl(217_91%_60%/.16),transparent_60%),radial-gradient(circle_at_70%_70%,hsl(199_89%_48%/.14),transparent_60%)]">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="hsl(217 91% 60%)" stroke-width="1.5" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+      </div>
+    )}
+  </a>
+  <div class:list={['flex flex-1 flex-col p-5', large && 'md:p-8']}>
+    <div class="flex items-center gap-2 text-xs text-fg-muted">
+      <a href={`/category/${category}`} class="rounded-md bg-primary/15 px-2 py-0.5 font-medium text-primary hover:bg-primary/25">{CATEGORIES[category].label}</a>
+      <FormattedDate date={pubDate} />
+    </div>
+    <h3 class:list={['mt-3 font-semibold tracking-tight text-fg', large ? 'text-2xl md:text-3xl' : 'text-lg']}>
+      <a href={href} class="hover:text-primary">{title}</a>
+    </h3>
+    <p class="mt-2 line-clamp-3 text-sm leading-relaxed text-fg-muted">{description}</p>
+    <a href={href} class="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-medium text-primary">Read guide <span aria-hidden="true">→</span></a>
+  </div>
+</article>

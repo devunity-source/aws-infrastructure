@@ -1,0 +1,17 @@
+---
+import Page from '../layouts/Page.astro';
+import { SITE } from '../lib/site';
+---
+<Page title="About Protocloud Reviews" description="Who writes this, and how we decide what to recommend.">
+  <p>Protocloud Reviews is written by a small team of working software and infrastructure engineers. We spend our days in terminals, IDEs and video calls, so we have opinions about the equipment that makes that bearable. This site is where we write them down.</p>
+
+  <h2>How we test</h2>
+  <p>Every pick on this site is something a member of the team has used for real work, usually for weeks, not an afternoon of unboxing. We care about the things that only show up with time: key feel after a month, whether a laptop throttles on a long build, whether a dock drops a monitor after sleep.</p>
+  <p>We do not accept payment for placement. Manufacturers do not see articles before they go live. When a product is on loan from a vendor we say so in the article.</p>
+
+  <h2>How we make money</h2>
+  <p>Two ways. Display ads served by Google, and affiliate links to retailers such as Amazon. If you click one of those links and buy something, we earn a small commission and you pay the same price. Neither affects which products we pick. The full version is on our <a href="/disclosure">affiliate disclosure</a> page.</p>
+
+  <h2>Corrections</h2>
+  <p>Specs and prices change constantly. If you spot something out of date, email <a href={`mailto:${SITE.email}`}>{SITE.email}</a> and we will fix it and note the update on the article.</p>
+</Page>

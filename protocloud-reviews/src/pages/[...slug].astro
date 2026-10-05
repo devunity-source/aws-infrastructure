@@ -1,0 +1,19 @@
+---
+import { getCollection, render } from 'astro:content';
+import Post from '../layouts/Post.astro';
+import ProductCard from '../components/ProductCard.astro';
+import AdSlot from '../components/AdSlot.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts', ({ data }) => !data.draft);
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+const related = (await getCollection('posts', ({ data, id }) => !data.draft && data.category === post.data.category && id !== post.id))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 4);
+---
+<Post post={post} related={related} headings={headings}>
+  <Content components={{ ProductCard, AdSlot }} />
+</Post>

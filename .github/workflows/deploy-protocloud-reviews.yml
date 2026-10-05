@@ -1,0 +1,55 @@
+name: Deploy Protocloud Reviews
+
+on:
+  push:
+    branches: [main]
+    paths: ['protocloud-reviews/**']
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-protocloud-reviews
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: protocloud-reviews
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: protocloud-reviews/package-lock.json
+
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+
+      # Deploy only when the server secrets exist. Until then the job just proves the build.
+      - name: Check deploy secrets
+        id: secrets
+        run: |
+          if [ -n "${{ secrets.BLOG_DEPLOY_HOST }}" ] && [ -n "${{ secrets.BLOG_DEPLOY_SSH_KEY }}" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::BLOG_DEPLOY_HOST / BLOG_DEPLOY_SSH_KEY not set, skipping rsync. Build passed."
+          fi
+
+      - name: Install SSH key
+        if: steps.secrets.outputs.ready == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.BLOG_DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.BLOG_DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Rsync to server
+        if: steps.secrets.outputs.ready == 'true'
+        run: |
+          rsync -az --delete -e "ssh -i ~/.ssh/deploy_key" dist/ \
+            "${{ secrets.BLOG_DEPLOY_USER }}@${{ secrets.BLOG_DEPLOY_HOST }}:${{ secrets.BLOG_DEPLOY_PATH || '/var/www/blog.protocloudsolutions.com' }}/"

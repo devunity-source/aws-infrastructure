@@ -1,0 +1,10 @@
+---
+import Page from '../layouts/Page.astro';
+import { SITE } from '../lib/site';
+---
+<Page title="Affiliate disclosure" description="Required by the FTC and Amazon, and the right thing to do anyway.">
+  <p>Protocloud Reviews is a participant in the Amazon Services LLC Associates Program, an affiliate advertising program designed to provide a means for sites to earn advertising fees by advertising and linking to Amazon.com. As an Amazon Associate we earn from qualifying purchases.</p>
+  <p>Some links on this site go to retailers. If you buy through one of them we may receive a commission. The price you pay is the same. Commissions never influence which products we recommend or how we rank them.</p>
+  <p>This site also shows display advertising served by Google AdSense. Those ads are chosen by Google, not by us, and an ad appearing next to a product is not an endorsement.</p>
+  <p>Questions about any of this: <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
+</Page>

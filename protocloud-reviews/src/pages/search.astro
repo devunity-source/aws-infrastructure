@@ -1,0 +1,29 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { CATEGORIES } from '../lib/site';
+const posts = (await getCollection('posts', ({ data }) => !data.draft)).map((p) => ({
+  href: `/${p.id}`, title: p.data.title, description: p.data.description, category: CATEGORIES[p.data.category].label, tags: p.data.tags.join(' '),
+}));
+---
+<Base title="Search" noindex>
+  <section class="mx-auto max-w-3xl px-4 pt-14">
+    <h1 class="text-4xl font-semibold tracking-tight">Search</h1>
+    <label class="sr-only" for="q">Search guides</label>
+    <input id="q" type="search" autofocus placeholder="Try “keyboard” or “ultrabook”" class="mt-6 w-full rounded-xl border border-line bg-card px-4 py-3 text-fg placeholder:text-fg-muted/60 focus:border-primary focus:outline-none" />
+    <ul id="results" class="mt-6 space-y-3"></ul>
+  </section>
+  <script define:vars={{ posts }}>
+    const q = document.getElementById('q');
+    const out = document.getElementById('results');
+    const render = (list) => {
+      out.innerHTML = list.length ? list.map((p) => `<li class="glass elevate rounded-2xl p-5"><span class="text-xs text-primary">${p.category}</span><a href="${p.href}" class="mt-1 block font-semibold hover:text-primary">${p.title}</a><p class="mt-1 text-sm text-fg-muted">${p.description}</p></li>`).join('') : '<li class="text-fg-muted">No matches.</li>';
+    };
+    const run = () => {
+      const term = q.value.trim().toLowerCase();
+      render(term ? posts.filter((p) => `${p.title} ${p.description} ${p.category} ${p.tags}`.toLowerCase().includes(term)) : posts);
+    };
+    q.addEventListener('input', run);
+    run();
+  </script>
+</Base>
