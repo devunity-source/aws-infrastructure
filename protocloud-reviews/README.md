@@ -109,7 +109,7 @@ Google reviews the site before serving ads. What they look for, and what is alre
 - [x] About and contact pages (`/about`, `/contact`)
 - [x] `ads.txt` served as plain text at the root
 - [x] Mobile layout, fast load, no layout shift from ads (slots reserve height)
-- [ ] 15 to 20 substantial original articles. Eight are here. Keep publishing before applying.
+- [x] 15 to 20 substantial original articles. Eighteen are here. Keep publishing anyway, Google likes a cadence.
 - [ ] Domain live on HTTPS for a few weeks with some real traffic
 - [ ] EU consent message configured in AdSense > Privacy & messaging (required for EEA/UK visitors)
 
