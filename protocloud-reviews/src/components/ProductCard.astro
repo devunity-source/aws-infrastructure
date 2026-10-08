@@ -20,10 +20,10 @@ const href = url ?? amazonUrl(asin || name);
 const rel = isAmazon ? 'nofollow sponsored noopener' : 'nofollow noopener';
 const label = isAmazon ? 'Check price on Amazon' : `Check price at ${store}`;
 ---
-<article class="glass not-prose my-8 rounded-2xl p-5 md:p-6" id={productId(name)}>
+<article class="glass not-prose my-8 rounded-2xl p-5 md:p-6" id={productId(name)} data-pc>
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <span class="inline-flex items-center gap-1.5 rounded-md bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
+      <span class="pc-badge inline-flex items-center gap-1.5 rounded-md bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
         {typeof index === 'number' && <span class="text-primary/70">#{index + 1}</span>} {pick}
       </span>
       <h3 class="mt-2 text-xl font-semibold tracking-tight text-fg">{name}</h3>
@@ -37,7 +37,7 @@ const label = isAmazon ? 'Check price on Amazon' : `Check price at ${store}`;
       data-pick={pick}
       data-store={isAmazon ? 'Amazon' : store}
       data-position={typeof index === 'number' ? index + 1 : undefined}
-      class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-fg hover:bg-primary/90"
+      class="pc-key inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-fg hover:bg-primary/90"
     >
       {label}
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
@@ -45,7 +45,7 @@ const label = isAmazon ? 'Check price on Amazon' : `Check price at ${store}`;
   </div>
   {specs.length > 0 && (
     <ul class="mt-4 flex flex-wrap gap-2">
-      {specs.map((s) => <li class="rounded-md border border-line bg-muted px-2.5 py-1 text-xs text-fg-muted">{s}</li>)}
+      {specs.map((s, i) => <li style={`--i:${i}`} class="pc-chip rounded-md border border-line bg-muted px-2.5 py-1 text-xs text-fg-muted">{s}</li>)}
     </ul>
   )}
   {(pros.length > 0 || cons.length > 0) && (
@@ -61,3 +61,54 @@ const label = isAmazon ? 'Check price on Amazon' : `Check price at ${store}`;
     </div>
   )}
 </article>
+
+<script>
+  // Cards already on screen at load stay still; the rest animate once as they scroll in.
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        e.target.classList.add('pc-play');
+        io.unobserve(e.target);
+      }
+    }, { threshold: 0.25 });
+    document.querySelectorAll<HTMLElement>('[data-pc]').forEach((card) => {
+      if (card.getBoundingClientRect().top > innerHeight) {
+        card.classList.add('pc-armed');
+        io.observe(card);
+      }
+    });
+  }
+</script>
+
+<style>
+  /* Before it scrolls in: card sits low, badge is blank, chips are hidden. */
+  .pc-armed:not(.pc-play) { opacity: 0; transform: translateY(18px); }
+  .pc-armed:not(.pc-play) .pc-badge { clip-path: inset(0 100% 0 0); }
+  .pc-armed:not(.pc-play) .pc-chip { opacity: 0; transform: translateY(6px); }
+
+  .pc-play { animation: pc-rise 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  /* The pick label types itself out, like the monitor on the homepage. */
+  .pc-play .pc-badge { animation: pc-type 520ms steps(14) 220ms both; }
+  .pc-play .pc-chip { animation: pc-chip 260ms cubic-bezier(0.3, 1.6, 0.5, 1) both; animation-delay: calc(500ms + var(--i) * 70ms); }
+
+  @keyframes pc-rise { from { opacity: 0; transform: translateY(18px); } }
+  @keyframes pc-type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  @keyframes pc-chip { from { opacity: 0; transform: translateY(6px); } }
+
+  /* The buy button is a keycap: it sits on a darker wall and presses down. */
+  .pc-key {
+    box-shadow: 0 4px 0 color-mix(in oklab, var(--color-primary), black 32%);
+    transform: translateY(-2px);
+    transition: transform 70ms ease-out, box-shadow 70ms ease-out;
+  }
+  .pc-key:hover { transform: translateY(0); box-shadow: 0 2px 0 color-mix(in oklab, var(--color-primary), black 32%); }
+  .pc-key:active { transform: translateY(2px); box-shadow: 0 0 0 color-mix(in oklab, var(--color-primary), black 32%); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pc-key { transition: none; }
+  }
+  @media print {
+    .pc-armed, .pc-armed .pc-badge, .pc-armed .pc-chip { opacity: 1 !important; transform: none !important; clip-path: none !important; }
+  }
+</style>
