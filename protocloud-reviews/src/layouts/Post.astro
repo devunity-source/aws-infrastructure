@@ -5,6 +5,7 @@ import AdSlot from '../components/AdSlot.astro';
 import PostCard from '../components/PostCard.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Newsletter from '../components/Newsletter.astro';
+import ReadingProgress from '../components/ReadingProgress.astro';
 import { AFFILIATE, CATEGORIES, REVIEWER, SITE, absUrl, productId, url, webpOf } from '../lib/site';
 
 interface Props { post: CollectionEntry<'posts'>; related: CollectionEntry<'posts'>[]; headings: { depth: number; slug: string; text: string }[] }
@@ -60,6 +61,7 @@ const jsonLd = [
 ];
 ---
 <Base title={title} description={description} image={heroImage} type="article" publishedTime={pubDate} modifiedTime={updatedDate} jsonLd={jsonLd} contentGroup={categoryLabel} seoTitle={seoTitle}>
+  <ReadingProgress />
   <article class="mx-auto max-w-6xl px-4 pt-10">
     <nav aria-label="Breadcrumb" class="text-xs text-fg-muted">
       <a href={url('/')} class="hover:text-fg">Home</a> <span class="mx-1.5">/</span>

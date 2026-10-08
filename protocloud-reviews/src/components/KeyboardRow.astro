@@ -1,0 +1,108 @@
+---
+// A row of retro keycaps above the footer. Each key opens a category; Esc goes back to the top.
+// The keys press in sequence once when the row scrolls into view. Reduced motion skips that.
+import { CATEGORIES, url } from '../lib/site';
+
+const path = Astro.url.pathname;
+const keys = Object.entries(CATEGORIES).map(([k, v]) => ({ href: url(`/category/${k}`), label: v.label.replace(' & Input', '') }));
+---
+<nav class="kb-wrap mx-auto mt-24 w-full max-w-6xl px-4" aria-label="Browse by category">
+  <div class="kb" data-kb>
+    <a href="#top" class="key esc" style="--i:0" data-top aria-label="Back to top">
+      <span class="cap"><span class="legend">Esc</span><span class="sub">Top</span></span>
+    </a>
+    {keys.map((k, i) => (
+      <a href={k.href} class:list={['key', path.startsWith(k.href) && 'on']} style={`--i:${i + 1}`}>
+        <span class="cap"><span class="legend">{k.label}</span></span>
+      </a>
+    ))}
+  </div>
+</nav>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-kb]').forEach((kb) => {
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        kb.classList.add('play');
+        io.disconnect();
+      }
+    }, { threshold: 0.6 });
+    io.observe(kb);
+  });
+  document.querySelectorAll<HTMLAnchorElement>('[data-top]').forEach((a) =>
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' });
+    }),
+  );
+</script>
+
+<style>
+  .kb {
+    --case: var(--color-muted);
+    --case-lo: var(--color-line);
+    --cap: var(--color-card);
+    --cap-side: color-mix(in oklab, var(--color-line), var(--color-fg) 14%);
+    --travel: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 14px calc(14px + var(--travel));
+    border-radius: 16px;
+    background: linear-gradient(to bottom, var(--case), var(--case-lo));
+    box-shadow:
+      inset 0 2px 0 color-mix(in oklab, var(--color-card) 70%, transparent),
+      0 18px 30px -18px color-mix(in oklab, var(--color-fg) 35%, transparent);
+  }
+
+  .key {
+    flex: 1 1 auto;
+    min-width: 96px;
+    border-radius: 9px;
+    background: var(--cap-side);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .esc { flex: 0 0 auto; min-width: 72px; --cap: var(--color-primary); --cap-side: color-mix(in oklab, var(--color-primary), black 30%); }
+
+  /* The cap sits above its side wall by --travel; pressing closes the gap. */
+  .cap {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 6px;
+    height: 58px;
+    padding: 8px 10px;
+    border-radius: 9px;
+    background: linear-gradient(to bottom, var(--cap), color-mix(in oklab, var(--cap), var(--color-fg) 5%));
+    box-shadow: inset 0 -2px 0 color-mix(in oklab, var(--color-fg) 8%, transparent);
+    transform: translateY(calc(var(--travel) * -1));
+    transition: transform 70ms ease-out;
+  }
+  .legend { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-fg); }
+  .sub { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: color-mix(in oklab, var(--color-primary-fg) 80%, transparent); }
+  .esc .legend { color: var(--color-primary-fg); }
+  .key.on .legend { color: var(--color-primary); }
+
+  .key:hover .cap, .key:active .cap { transform: translateY(-1px); }
+  .key:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+  .key:focus-visible .cap { transform: translateY(-1px); }
+
+  .kb.play .cap { animation: press 220ms ease-out calc(var(--i) * 85ms + 150ms) 1; }
+  @keyframes press {
+    0%, 100% { transform: translateY(calc(var(--travel) * -1)); }
+    35% { transform: translateY(-1px); }
+  }
+
+  @media (max-width: 640px) {
+    .key { min-width: calc(50% - 5px); }
+    .esc { min-width: calc(50% - 5px); }
+    .cap { height: 50px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kb.play .cap { animation: none; }
+    .cap { transition: none; }
+  }
+</style>

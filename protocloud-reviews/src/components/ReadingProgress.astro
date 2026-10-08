@@ -1,0 +1,44 @@
+---
+// A DOS-style block progress bar along the top edge that fills as you read the article.
+// It fills in whole blocks, so it steps rather than glides. Purely visual.
+---
+<div class="rp" aria-hidden="true"><div class="rp-fill" data-rp></div></div>
+
+<script>
+  const BLOCK = 14; // px per block, including the gap
+  document.querySelectorAll<HTMLElement>('[data-rp]').forEach((fill) => {
+    const article = document.querySelector('article');
+    if (!article) return;
+    let queued = false;
+    const update = () => {
+      queued = false;
+      const r = article.getBoundingClientRect();
+      const total = r.height - window.innerHeight;
+      const p = total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 1;
+      const width = fill.parentElement!.clientWidth;
+      fill.style.width = `${Math.round((p * width) / BLOCK) * BLOCK}px`;
+    };
+    const queue = () => { if (!queued) { queued = true; requestAnimationFrame(update); } };
+    addEventListener('scroll', queue, { passive: true });
+    addEventListener('resize', queue);
+    update();
+  });
+</script>
+
+<style>
+  .rp {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 50;
+    height: 6px;
+    pointer-events: none;
+  }
+  .rp-fill {
+    width: 0;
+    height: 100%;
+    background: var(--color-primary);
+    -webkit-mask: repeating-linear-gradient(to right, #000 0 11px, transparent 11px 14px);
+    mask: repeating-linear-gradient(to right, #000 0 11px, transparent 11px 14px);
+    box-shadow: 0 0 8px color-mix(in oklab, var(--color-primary) 60%, transparent);
+  }
+</style>
