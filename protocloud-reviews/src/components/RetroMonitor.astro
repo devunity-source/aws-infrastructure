@@ -1,0 +1,224 @@
+---
+// A 1990s CRT in the homepage hero. It powers on, types a DOS command and lists
+// the newest guides as real links. Reduced motion shows the finished screen.
+import { getCollection } from 'astro:content';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const posts = (await getCollection('posts', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 4);
+
+const MAX = 24; // characters that fit beside the date column
+const short = (t: string) => {
+  const s = t.replace(/^The /, '').replace(/^Best /, '').replace(/ in \d{4}$/, '').replace(/[:,].*$/, '');
+  return s.length > MAX ? `${s.slice(0, MAX - 1).trimEnd()}…` : s;
+};
+const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', timeZone: 'UTC' });
+
+const boot = 'PROTOCLOUD BIOS v2.6  640K OK';
+const cmd = 'dir guides /new';
+const lines = posts.map((p, i) => ({
+  href: `${base}/${p.id}`,
+  title: p.data.title,
+  date: fmt.format(p.data.pubDate).toUpperCase(),
+  name: short(p.data.title),
+  delay: 2.9 + i * 0.28,
+}));
+const done = 2.9 + lines.length * 0.28 + 0.2;
+---
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
+
+<figure class="crt" aria-label="Newest guides, shown on a retro computer screen">
+  <div class="case">
+    <div class="screen">
+      <div class="phosphor">
+        <p class="type boot" style={`--n:${boot.length};--d:0.9s`} aria-hidden="true">{boot}</p>
+        <p class="prompt"><span aria-hidden="true">C:\&gt; </span><span class="type" style={`--n:${cmd.length};--d:1.7s`}>{cmd}</span></p>
+        <ul>
+          {lines.map((l) => (
+            <li style={`--d:${l.delay}s`}>
+              <a href={l.href} title={l.title}><span class="date">{l.date}</span> {l.name}</a>
+            </li>
+          ))}
+        </ul>
+        <p class="tail" style={`--d:${done}s`} aria-hidden="true">{lines.length} file(s)<span class="cursor">_</span></p>
+      </div>
+      <span class="beam" aria-hidden="true"></span>
+    </div>
+    <div class="chin" aria-hidden="true">
+      <span class="badge">PROTOCLOUD</span>
+      <span class="vents"></span>
+      <span class="led"></span>
+    </div>
+  </div>
+  <div class="neck" aria-hidden="true"></div>
+  <div class="foot" aria-hidden="true"></div>
+</figure>
+
+<style>
+  .crt {
+    --plastic: #e6dcc6;
+    --plastic-lo: #c9bc9f;
+    --plastic-hi: #f5eedf;
+    --tube: #120d06;
+    --phosphor: #ffb000;
+    --phosphor-dim: #a86f00;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    filter: drop-shadow(0 24px 30px rgb(2 47 64 / 0.14));
+  }
+
+  .case {
+    border-radius: 18px 18px 12px 12px;
+    background: linear-gradient(160deg, var(--plastic-hi), var(--plastic) 45%, var(--plastic-lo));
+    padding: 22px 22px 0;
+    box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.08), inset 0 2px 0 rgb(255 255 255 / 0.6);
+  }
+
+  .screen {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: 14px / 18px;
+    background: var(--tube);
+    overflow: hidden;
+    box-shadow: inset 0 0 0 6px #2b2418, inset 0 0 40px rgb(0 0 0 / 0.9);
+  }
+
+  /* Curved glass: vignette plus scanlines, laid over the text. */
+  .screen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 90% at 50% 50%, transparent 55%, rgb(0 0 0 / 0.55)),
+      repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.22) 0 1px, transparent 1px 3px);
+  }
+
+  .phosphor {
+    position: absolute;
+    inset: 0;
+    padding: 9% 9%;
+    font-family: 'VT323', ui-monospace, monospace;
+    font-size: clamp(16px, 4.6vw, 21px);
+    line-height: 1.15;
+    color: var(--phosphor);
+    text-shadow: 0 0 4px rgb(255 176 0 / 0.65), 0 0 14px rgb(255 140 0 / 0.3);
+    text-transform: uppercase;
+    animation: on 0.2s 0.75s both, flicker 5s 4s infinite;
+  }
+
+  .phosphor p, .phosphor ul { margin: 0; }
+  .boot { color: var(--phosphor-dim); margin-bottom: 0.6em !important; }
+  .prompt { margin-bottom: 0.35em !important; white-space: nowrap; }
+
+  .type {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    vertical-align: bottom;
+    width: calc(var(--n) * 1ch);
+    animation: type calc(var(--n) * 0.035s) steps(var(--n)) var(--d) both;
+  }
+
+  .phosphor ul { list-style: none; padding: 0; }
+  .phosphor li { animation: on 0.01s var(--d) both; }
+
+  .phosphor a {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    padding: 0 0.25ch;
+    margin: 0 -0.25ch;
+  }
+  .date { color: var(--phosphor-dim); margin-right: 1ch; }
+
+  /* Inverse video, the way a DOS file manager marked a selection. */
+  .phosphor a:hover, .phosphor a:focus-visible {
+    background: var(--phosphor);
+    color: var(--tube);
+    text-shadow: none;
+    outline-style: none;
+  }
+  .phosphor a:hover .date, .phosphor a:focus-visible .date { color: var(--tube); }
+
+  .tail { margin-top: 0.6em !important; color: var(--phosphor-dim); animation: on 0.01s var(--d) both; }
+  .cursor { color: var(--phosphor); margin-left: 1ch; animation: blink 1.06s steps(1) infinite; }
+
+  /* Power-on: the electron beam draws a line, then opens to full height. */
+  .beam {
+    position: absolute;
+    inset: 0;
+    background: #fff6dc;
+    box-shadow: 0 0 30px #ffd27a;
+    pointer-events: none;
+    animation: beam 0.75s 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  .chin {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 46px;
+    padding: 0 4px;
+  }
+  .badge {
+    font: 600 10px/1 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: 0.22em;
+    color: #8f8269;
+  }
+  .vents {
+    flex: 1;
+    height: 10px;
+    background: repeating-linear-gradient(to right, rgb(0 0 0 / 0.16) 0 2px, transparent 2px 6px);
+    border-radius: 2px;
+  }
+  .led {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #3c3a33;
+    animation: led 0.01s 0.2s both;
+  }
+
+  .neck {
+    width: 26%;
+    height: 16px;
+    margin: 0 auto;
+    background: linear-gradient(to bottom, #b3a585, var(--plastic-lo));
+  }
+  .foot {
+    width: 58%;
+    height: 14px;
+    margin: 0 auto;
+    border-radius: 6px 6px 3px 3px;
+    background: linear-gradient(to bottom, var(--plastic), var(--plastic-lo));
+  }
+
+  @keyframes beam {
+    0% { transform: scale(0, 0.006); opacity: 1; }
+    45% { transform: scale(1, 0.006); opacity: 1; }
+    80% { transform: scale(1, 1); opacity: 0.6; }
+    100% { transform: scale(1, 1); opacity: 0; }
+  }
+  @keyframes on { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes type { from { width: 0; } }
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes led { to { background: #4cd964; box-shadow: 0 0 6px #4cd964; } }
+  @keyframes flicker {
+    0%, 96%, 100% { opacity: 1; }
+    97% { opacity: 0.86; }
+    98% { opacity: 1; }
+    99% { opacity: 0.93; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .phosphor, .phosphor li, .tail, .type, .beam, .led, .cursor { animation: none; }
+    .beam { display: none; }
+    .led { background: #4cd964; }
+  }
+</style>
