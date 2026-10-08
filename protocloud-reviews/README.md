@@ -2,9 +2,9 @@
 
 Standalone tech gadget blog (Protocloud Reviews), monetised with Google AdSense and Amazon affiliate links.
 Static site built with [Astro](https://astro.build), Tailwind CSS 4 and MDX. Theme tokens are lifted
-from protocloudsolutions.com (blue `hsl(217 91% 54%)` and cyan accents on a white surface, Space Grotesk).
+from protocloudsolutions.com, recoloured: orange `#ce340d` and teal accents on a warm off-white surface, Space Grotesk.
 
-Served at `https://blog.protocloudsolutions.com` from the same nginx box as the main site.
+Served at `https://protocloudsolutions.com/blog` from the same nginx box as the main site (Astro `base: '/blog'`).
 
 ## Before you go live
 
@@ -81,15 +81,12 @@ DEPLOY_HOST=ubuntu@your-server ./deploy/deploy.sh
 ### Server setup (once)
 
 ```bash
-sudo mkdir -p /var/www/blog.protocloudsolutions.com
-sudo cp deploy/blog-static.conf /etc/nginx/snippets/
-sudo cp deploy/nginx-blog.conf /etc/nginx/sites-available/blog.protocloudsolutions.com
-sudo ln -s /etc/nginx/sites-available/blog.protocloudsolutions.com /etc/nginx/sites-enabled/
+sudo mkdir -p /var/www/html/protocloud-reviews/blog
+sudo cp deploy/protocloud-blog.conf /etc/nginx/snippets/
+# then add `include snippets/protocloud-blog.conf;` inside the 443 server block of
+# /etc/nginx/sites-available/protocloudsolutions.com, above `location / { ... }`
 sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d blog.protocloudsolutions.com
 ```
-
-Add an `A` record for `blog` pointing at the server's IP first so certbot can validate.
 
 ### Automatic on push
 
@@ -99,7 +96,7 @@ Repository secrets it needs:
 - `BLOG_DEPLOY_HOST`: server hostname or IP
 - `BLOG_DEPLOY_USER`: ssh user with write access to the web root
 - `BLOG_DEPLOY_SSH_KEY`: private key for that user
-- `BLOG_DEPLOY_PATH`: optional, defaults to `/var/www/blog.protocloudsolutions.com`
+- `BLOG_DEPLOY_PATH`: optional, defaults to `/var/www/html/protocloud-reviews/blog`
 
 ## AdSense approval checklist
 

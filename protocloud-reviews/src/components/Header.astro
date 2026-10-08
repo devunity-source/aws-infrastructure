@@ -1,11 +1,11 @@
 ---
 import Logo from './Logo.astro';
-import { CATEGORIES } from '../lib/site';
+import { CATEGORIES, url } from '../lib/site';
 const path = Astro.url.pathname;
-const nav = Object.entries(CATEGORIES).map(([k, v]) => ({ href: `/category/${k}`, label: v.label }));
+const nav = Object.entries(CATEGORIES).map(([k, v]) => ({ href: url(`/category/${k}`), label: v.label }));
 ---
 <header class="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur-md">
-  <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-4">
+  <div class="mx-auto flex h-20 max-w-6xl items-center justify-between gap-6 px-4">
     <Logo />
     <nav class="hidden items-center gap-1 md:flex" aria-label="Categories">
       {nav.map((n) => (
@@ -19,7 +19,7 @@ const nav = Object.entries(CATEGORIES).map(([k, v]) => ({ href: `/category/${k}`
       ))}
     </nav>
     <div class="flex items-center gap-2">
-      <a href="/search" class="grid h-9 w-9 place-items-center rounded-md border border-line text-fg-muted hover:text-fg hover:bg-muted" aria-label="Search">
+      <a href={url('/search')} class="grid h-9 w-9 place-items-center rounded-md border border-line text-fg-muted hover:text-fg hover:bg-muted" aria-label="Search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       </a>
       <button id="nav-toggle" class="grid h-9 w-9 place-items-center rounded-md border border-line md:hidden" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav">
@@ -32,7 +32,7 @@ const nav = Object.entries(CATEGORIES).map(([k, v]) => ({ href: `/category/${k}`
       {nav.map((n) => (
         <a href={n.href} class="rounded-md px-3 py-2 text-sm text-fg-muted hover:bg-muted hover:text-fg">{n.label}</a>
       ))}
-      <a href="/about" class="rounded-md px-3 py-2 text-sm text-fg-muted hover:bg-muted hover:text-fg">About</a>
+      <a href={url('/about')} class="rounded-md px-3 py-2 text-sm text-fg-muted hover:bg-muted hover:text-fg">About</a>
     </div>
   </nav>
 </header>

@@ -52,4 +52,4 @@ jobs:
         if: steps.secrets.outputs.ready == 'true'
         run: |
           rsync -az --delete -e "ssh -i ~/.ssh/deploy_key" dist/ \
-            "${{ secrets.BLOG_DEPLOY_USER }}@${{ secrets.BLOG_DEPLOY_HOST }}:${{ secrets.BLOG_DEPLOY_PATH || '/var/www/blog.protocloudsolutions.com' }}/"
+            "${{ secrets.BLOG_DEPLOY_USER }}@${{ secrets.BLOG_DEPLOY_HOST }}:${{ secrets.BLOG_DEPLOY_PATH || '/var/www/html/protocloud-reviews/blog' }}/"

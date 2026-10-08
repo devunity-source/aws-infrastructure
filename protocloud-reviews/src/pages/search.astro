@@ -1,9 +1,9 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import { CATEGORIES } from '../lib/site';
+import { CATEGORIES, url } from '../lib/site';
 const posts = (await getCollection('posts', ({ data }) => !data.draft)).map((p) => ({
-  href: `/${p.id}`, title: p.data.title, description: p.data.description, category: CATEGORIES[p.data.category].label, tags: p.data.tags.join(' '),
+  href: url(`/${p.id}`), title: p.data.title, description: p.data.description, category: CATEGORIES[p.data.category].label, tags: p.data.tags.join(' '),
 }));
 ---
 <Base title="Search" noindex>
