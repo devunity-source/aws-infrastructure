@@ -58,23 +58,27 @@ const done = 2.9 + lines.length * 0.28 + 0.2;
 
 <style>
   .crt {
-    --plastic: #e6dcc6;
-    --plastic-lo: #c9bc9f;
-    --plastic-hi: #f5eedf;
-    --tube: #120d06;
-    --phosphor: #ffb000;
-    --phosphor-dim: #a86f00;
+    /* Everything derives from the site theme in global.css. */
+    --plastic-hi: var(--color-card);
+    --plastic: var(--color-muted);
+    --plastic-lo: var(--color-line);
+    --plastic-edge: color-mix(in oklab, var(--color-line), var(--color-fg) 18%);
+    --tube: color-mix(in oklab, var(--color-fg), black 45%);
+    --bezel: var(--color-fg);
+    --phosphor: color-mix(in oklab, var(--color-primary), white 30%);
+    --phosphor-dim: color-mix(in oklab, var(--color-accent), white 28%);
+    --led: color-mix(in oklab, var(--color-accent), white 35%);
     width: 100%;
     max-width: 400px;
     margin: 0 auto;
-    filter: drop-shadow(0 24px 30px rgb(2 47 64 / 0.14));
+    filter: drop-shadow(0 24px 30px color-mix(in oklab, var(--color-fg) 16%, transparent));
   }
 
   .case {
     border-radius: 18px 18px 12px 12px;
     background: linear-gradient(160deg, var(--plastic-hi), var(--plastic) 45%, var(--plastic-lo));
     padding: 22px 22px 0;
-    box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.08), inset 0 2px 0 rgb(255 255 255 / 0.6);
+    box-shadow: inset 0 -3px 0 color-mix(in oklab, var(--color-fg) 8%, transparent), inset 0 2px 0 rgb(255 255 255 / 0.6);
   }
 
   .screen {
@@ -83,7 +87,7 @@ const done = 2.9 + lines.length * 0.28 + 0.2;
     border-radius: 14px / 18px;
     background: var(--tube);
     overflow: hidden;
-    box-shadow: inset 0 0 0 6px #2b2418, inset 0 0 40px rgb(0 0 0 / 0.9);
+    box-shadow: inset 0 0 0 6px var(--bezel), inset 0 0 40px rgb(0 0 0 / 0.75);
   }
 
   /* Curved glass: vignette plus scanlines, laid over the text. */
@@ -105,7 +109,7 @@ const done = 2.9 + lines.length * 0.28 + 0.2;
     font-size: clamp(16px, 4.6vw, 21px);
     line-height: 1.15;
     color: var(--phosphor);
-    text-shadow: 0 0 4px rgb(255 176 0 / 0.65), 0 0 14px rgb(255 140 0 / 0.3);
+    text-shadow: 0 0 4px color-mix(in oklab, var(--phosphor) 65%, transparent), 0 0 14px color-mix(in oklab, var(--color-primary) 35%, transparent);
     text-transform: uppercase;
     animation: on 0.2s 0.75s both, flicker 5s 4s infinite;
   }
@@ -153,8 +157,8 @@ const done = 2.9 + lines.length * 0.28 + 0.2;
   .beam {
     position: absolute;
     inset: 0;
-    background: #fff6dc;
-    box-shadow: 0 0 30px #ffd27a;
+    background: color-mix(in oklab, var(--phosphor), white 75%);
+    box-shadow: 0 0 30px var(--phosphor);
     pointer-events: none;
     animation: beam 0.75s 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
@@ -169,19 +173,19 @@ const done = 2.9 + lines.length * 0.28 + 0.2;
   .badge {
     font: 600 10px/1 ui-sans-serif, system-ui, sans-serif;
     letter-spacing: 0.22em;
-    color: #8f8269;
+    color: var(--color-fg-muted);
   }
   .vents {
     flex: 1;
     height: 10px;
-    background: repeating-linear-gradient(to right, rgb(0 0 0 / 0.16) 0 2px, transparent 2px 6px);
+    background: repeating-linear-gradient(to right, color-mix(in oklab, var(--color-fg) 16%, transparent) 0 2px, transparent 2px 6px);
     border-radius: 2px;
   }
   .led {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #3c3a33;
+    background: color-mix(in oklab, var(--color-fg), black 30%);
     animation: led 0.01s 0.2s both;
   }
 
@@ -189,7 +193,7 @@ const done = 2.9 + lines.length * 0.28 + 0.2;
     width: 26%;
     height: 16px;
     margin: 0 auto;
-    background: linear-gradient(to bottom, #b3a585, var(--plastic-lo));
+    background: linear-gradient(to bottom, var(--plastic-edge), var(--plastic-lo));
   }
   .foot {
     width: 58%;
@@ -208,7 +212,7 @@ const done = 2.9 + lines.length * 0.28 + 0.2;
   @keyframes on { from { opacity: 0; } to { opacity: 1; } }
   @keyframes type { from { width: 0; } }
   @keyframes blink { 50% { opacity: 0; } }
-  @keyframes led { to { background: #4cd964; box-shadow: 0 0 6px #4cd964; } }
+  @keyframes led { to { background: var(--led); box-shadow: 0 0 6px var(--led); } }
   @keyframes flicker {
     0%, 96%, 100% { opacity: 1; }
     97% { opacity: 0.86; }
@@ -219,6 +223,6 @@ const done = 2.9 + lines.length * 0.28 + 0.2;
   @media (prefers-reduced-motion: reduce) {
     .phosphor, .phosphor li, .tail, .type, .beam, .led, .cursor { animation: none; }
     .beam { display: none; }
-    .led { background: #4cd964; }
+    .led { background: var(--led); box-shadow: 0 0 6px var(--led); }
   }
 </style>
