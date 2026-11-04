@@ -2,13 +2,13 @@
 # Build the blog and rsync it to the nginx box.
 # Usage: DEPLOY_HOST=user@1.2.3.4 ./deploy/deploy.sh
 #   DEPLOY_HOST  ssh target (required)
-#   DEPLOY_PATH  web root on the server (default /var/www/blog.protocloudsolutions.com)
+#   DEPLOY_PATH  web root on the server (default /var/www/html/protocloud-reviews/blog)
 #   SSH_KEY      optional path to a private key
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 : "${DEPLOY_HOST:?Set DEPLOY_HOST, e.g. ubuntu@203.0.113.10}"
-DEPLOY_PATH="${DEPLOY_PATH:-/var/www/blog.protocloudsolutions.com}"
+DEPLOY_PATH="${DEPLOY_PATH:-/var/www/html/protocloud-reviews/blog}"
 SSH_OPTS=(-o StrictHostKeyChecking=accept-new)
 [[ -n "${SSH_KEY:-}" ]] && SSH_OPTS+=(-i "$SSH_KEY")
 

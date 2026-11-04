@@ -55,12 +55,13 @@ Paragraphs about the second product.
 | Field | Required | Notes |
 |---|---|---|
 | `title` | yes | Page title and H1 |
+| `seoTitle` | no | Exact `<title>` and social title, used as-is with no site-name suffix. Use it when the H1 is too long for search results (aim for 60 characters or fewer) |
 | `description` | yes | Max 170 characters. Meta description and card blurb |
 | `pubDate` | yes | `YYYY-MM-DD`. Posts sort newest first |
-| `category` | yes | One of `laptops`, `keyboards`, `mice`, `monitors`, `audio`, `gadgets`. Anything else fails the build |
-| `tags` | no | Lowercase, hyphenated. Each tag gets its own page at `/tags/<tag>` |
+| `category` | yes | One of `laptops`, `desktops`, `keyboards`, `mice`, `monitors`, `audio`, `gadgets`. Anything else fails the build |
+| `tags` | no | Lowercase, hyphenated. Each tag gets its own page at `/blog/tags/<tag>` |
 | `products` | no | Drives the "Our picks at a glance" table and the product cards |
-| `heroImage` | no | Path under `public/`, e.g. `/images/webcams.jpg`. 1200 by 630 works for both the hero and social sharing |
+| `heroImage` | no | Path under `public/` without the `/blog` prefix, e.g. `/images/webcams.png`. Put a `.webp` with the same name next to it; the page serves it first. 1200 by 630 works for both the hero and social sharing |
 | `heroAlt` | no | Alt text for the hero image |
 | `featured` | no | `true` puts the post in the big homepage hero card. Otherwise the newest post takes that spot |
 | `updatedDate` | no | Shows an "Updated" date on the article and in structured data |
@@ -73,11 +74,14 @@ Each item in `products` takes:
 - `name` (required): the product name as shown on the card
 - `pick` (required): the label, e.g. "Best overall", "Best value"
 - `asin` (optional): Amazon ASIN. With it, the button links straight to the product. Without it, the button runs an Amazon search for the name. Your affiliate tag is appended either way
+- `url` and `store` (optional): for a product Amazon doesn't sell, set `url` to the retailer's page and `store` to its name. The button then reads "Check price at {store}" and links there without the affiliate tag
 - `specs`, `pros`, `cons` (optional): lists of short strings
 
 Write the product list once in the frontmatter. Each `<ProductCard index={N} {...frontmatter.products[N]} />` in the body pulls from it, and the glance table at the top of the article is generated from it automatically.
 
 ## Body
+
+Links to other guides need the `/blog` prefix, e.g. `[portable monitors](/blog/best-portable-monitors)`.
 
 - `## Headings` build the table of contents. It appears once there are three or more
 - `<AdSlot slot="inArticle" format="fluid" layout="in-article" />` places an ad. One per article in the body is enough; the layout adds another after the content and one in the sidebar
