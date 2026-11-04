@@ -1,6 +1,7 @@
 """SQLite storage. One file, no server. Imports are idempotent by content hash."""
 from __future__ import annotations
 
+import hashlib
 import json
 import sqlite3
 from datetime import datetime, timezone
@@ -33,6 +34,21 @@ CREATE TABLE IF NOT EXISTS gsc_rows (
   clicks INTEGER NOT NULL, impressions INTEGER NOT NULL,
   ctr REAL NOT NULL, position REAL NOT NULL,
   PRIMARY KEY (date, page, query, device, country)
+);
+-- Complete page totals from the API (no query dimension, so anonymised traffic is included).
+CREATE TABLE IF NOT EXISTS gsc_page_rows (
+  date TEXT NOT NULL, page TEXT NOT NULL,
+  device TEXT NOT NULL, country TEXT NOT NULL,
+  clicks INTEGER NOT NULL, impressions INTEGER NOT NULL,
+  ctr REAL NOT NULL, position REAL NOT NULL,
+  PRIMARY KEY (date, page, device, country)
+);
+-- One row per fetched day, so fetches are incremental. A day with no data is still logged.
+CREATE TABLE IF NOT EXISTS api_fetches (
+  site TEXT NOT NULL, date TEXT NOT NULL,
+  rows INTEGER NOT NULL, page_rows INTEGER NOT NULL,
+  fetched_at TEXT NOT NULL,
+  PRIMARY KEY (site, date)
 );
 CREATE TABLE IF NOT EXISTS opportunity_scores (
   import_id INTEGER NOT NULL REFERENCES imports(id) ON DELETE CASCADE,
@@ -96,3 +112,89 @@ def save_scores(con, import_id: int, scores: list) -> None:
             "INSERT INTO opportunity_scores VALUES (?,?,?,?,?,?)",
             [(import_id, s.page, s.score, json.dumps(s.components), json.dumps(s.reasons), _now())
              for s in scores])
+
+
+# ---------- API data ----------
+
+def save_api_day(con, site: str, day: str, rows: list[dict], page_rows: list[dict]) -> None:
+    """Replace one day's API data. Rerunning a day is safe."""
+    with con:
+        con.execute("DELETE FROM gsc_rows WHERE date=?", (day,))
+        con.execute("DELETE FROM gsc_page_rows WHERE date=?", (day,))
+        con.executemany(
+            "INSERT INTO gsc_rows VALUES (?,?,?,?,?,?,?,?,?)",
+            [(day, r["page"], r["query"], r["device"], r["country"],
+              r["clicks"], r["impressions"], r["ctr"], r["position"]) for r in rows])
+        con.executemany(
+            "INSERT INTO gsc_page_rows VALUES (?,?,?,?,?,?,?,?)",
+            [(day, r["page"], r["device"], r["country"],
+              r["clicks"], r["impressions"], r["ctr"], r["position"]) for r in page_rows])
+        con.execute("INSERT OR REPLACE INTO api_fetches VALUES (?,?,?,?,?)",
+                    (site, day, len(rows), len(page_rows), _now()))
+
+
+def fetch_log(con, site: str) -> dict[str, int]:
+    """date -> page rows stored for it, for every day already fetched."""
+    return {r["date"]: r["page_rows"] for r in
+            con.execute("SELECT date, page_rows FROM api_fetches WHERE site=?", (site,))}
+
+
+def api_sites(con) -> list[str]:
+    return [r["site"] for r in con.execute("SELECT DISTINCT site FROM api_fetches ORDER BY site")]
+
+
+def api_date_range(con) -> tuple[str | None, str | None]:
+    r = con.execute("SELECT MIN(date) AS lo, MAX(date) AS hi FROM api_fetches").fetchone()
+    return r["lo"], r["hi"]
+
+
+# SUM(position * impressions) / SUM(impressions) is the impression-weighted average
+# position, the same way Search Console reports it.
+_AGG = ("SUM(clicks) AS clicks, SUM(impressions) AS impressions, "
+        "CASE WHEN SUM(impressions) > 0 THEN 1.0 * SUM(clicks) / SUM(impressions) ELSE 0 END AS ctr, "
+        "CASE WHEN SUM(impressions) > 0 THEN SUM(position * impressions) / SUM(impressions) ELSE 0 END AS position")
+
+
+def _window_aggregates(con, start: str, end: str) -> dict[str, list[tuple]]:
+    q = lambda table, key: [tuple(r) for r in con.execute(
+        f"SELECT {key} AS key, {_AGG} FROM {table} WHERE date BETWEEN ? AND ? "
+        f"GROUP BY {key} HAVING SUM(impressions) > 0 ORDER BY key", (start, end))]
+    return {"page": q("gsc_page_rows", "page"), "query": q("gsc_rows", "query"),
+            "date": q("gsc_page_rows", "date"), "device": q("gsc_page_rows", "device"),
+            "country": q("gsc_page_rows", "country")}
+
+
+def build_window_import(con, site: str, start: str, end: str) -> tuple[int, bool, dict]:
+    """Aggregate stored API rows for [start, end] into an import the scorer reads.
+    Same data gives the same content hash, so rebuilding a window is a no-op."""
+    aggs = _window_aggregates(con, start, end)
+    h = hashlib.sha256(json.dumps({"site": site, "start": start, "end": end, "aggs": aggs},
+                                  sort_keys=True).encode()).hexdigest()
+    pages = aggs["page"]
+    totals = {"clicks": sum(r[1] for r in pages), "impressions": sum(r[2] for r in pages),
+              "pages": len(pages), "queries": len(aggs["query"])}
+    row = con.execute("SELECT id FROM imports WHERE content_hash=?", (h,)).fetchone()
+    if row:
+        return row["id"], False, totals
+    with con:
+        cur = con.execute(
+            "INSERT INTO imports(source, content_hash, date_start, date_end, filters, imported_at)"
+            " VALUES ('api',?,?,?,?,?)",
+            (h, start, end, json.dumps({"site": site}), _now()))
+        iid = cur.lastrowid
+        for dim, rows in aggs.items():
+            con.executemany("INSERT INTO gsc_aggregate VALUES (?,?,?,?,?,?,?)",
+                            [(iid, dim, *r) for r in rows])
+    return iid, True, totals
+
+
+def observed_query_pages(con, start: str, end: str) -> dict[str, list[dict]]:
+    """page -> its queries, observed from the API join (not inferred from wording)."""
+    out: dict[str, list[dict]] = {}
+    for r in con.execute(
+            f"SELECT page, query AS key, {_AGG} FROM gsc_rows WHERE date BETWEEN ? AND ? "
+            "GROUP BY page, query HAVING SUM(impressions) > 0", (start, end)):
+        out.setdefault(r["page"], []).append(
+            dict(key=r["key"], clicks=r["clicks"], impressions=r["impressions"],
+                 ctr=r["ctr"], position=r["position"]))
+    return out
