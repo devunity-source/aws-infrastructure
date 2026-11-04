@@ -218,6 +218,23 @@ def test_cli_refetches_recent_empty_days(tmp_path, monkeypatch):
     assert "2026-10-31" in fetched and "2026-10-01" not in fetched
 
 
+def test_score_days_picks_the_matching_window(tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(cli, "make_client", lambda key: _fake_api(calls))
+    db = str(tmp_path / "x.sqlite")
+    assert cli.main(["--db", db, "fetch", "--site", "sc-domain:example.com",
+                     "--start", "2026-10-01", "--end", "2026-10-28"]) == 0
+    # Build 7 then 28, then rebuild 7: same end date, so "latest" alone would be ambiguous.
+    for d in (7, 28, 7):
+        assert cli.main(["--db", db, "window", "--days", str(d)]) == 0
+    for d, start in ((7, "2026-10-22"), (28, "2026-10-01")):
+        out = tmp_path / f"s{d}.json"
+        assert cli.main(["--db", db, "score", "--days", str(d), "--posts-dir", str(tmp_path),
+                         "--json", str(out)]) == 0
+        assert json.loads(out.read_text())["import"]["date_start"] == start
+    assert cli.main(["--db", db, "score", "--days", "90"]) == 2  # no 90-day window built
+
+
 def test_cli_window_needs_fetched_data(tmp_path):
     assert cli.main(["--db", str(tmp_path / "x.sqlite"), "window"]) == 2
 

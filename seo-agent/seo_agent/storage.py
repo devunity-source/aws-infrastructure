@@ -96,7 +96,13 @@ def save_export(con: sqlite3.Connection, exp: GSCExport) -> tuple[int, bool]:
     return iid, True
 
 
-def latest_import(con: sqlite3.Connection) -> sqlite3.Row | None:
+def latest_import(con: sqlite3.Connection, days: int | None = None) -> sqlite3.Row | None:
+    """Most recent import. With days, only imports covering exactly that many days count,
+    so a 28-day and a 90-day window ending the same day can't be mixed up."""
+    if days:
+        return con.execute(
+            "SELECT * FROM imports WHERE julianday(date_end) - julianday(date_start) = ? "
+            "ORDER BY date_end DESC, id DESC LIMIT 1", (days - 1,)).fetchone()
     return con.execute("SELECT * FROM imports ORDER BY date_end DESC, id DESC LIMIT 1").fetchone()
 
 

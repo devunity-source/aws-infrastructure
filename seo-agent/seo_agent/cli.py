@@ -220,9 +220,11 @@ class _Stop(Exception):
 def _score_latest(con, a):
     """Score the latest import. Returns (import row, results, summary)."""
     cfg = config_mod.load(getattr(a, "config", None))
-    imp = latest_import(con)
+    days = getattr(a, "days", None)
+    imp = latest_import(con, days)
     if not imp:
-        raise _Stop("nothing imported yet. Run: python -m seo_agent import <export.zip>")
+        raise _Stop(f"no {days}-day import yet. Run: python -m seo_agent window --days {days}" if days else
+                    "nothing imported yet. Run: python -m seo_agent import <export.zip>")
     # Compare like with like: same source and same window length, ending earlier.
     prev = con.execute(
         "SELECT id FROM imports WHERE id<>? AND date_end<? AND source=? "
@@ -315,11 +317,13 @@ def main(argv=None) -> int:
                    "Defaults to protocloud-reviews/src/content/posts in this repo.")
     p.add_argument("--nginx", help="blog nginx snippet with 410 and 301 rules. "
                    "Defaults to protocloud-reviews/deploy/protocloud-blog.conf in this repo.")
+    p.add_argument("--days", type=int, help="score the latest import covering exactly this many days")
     p.set_defaults(fn=cmd_score)
     p = sub.add_parser("audit", help="content checks on every post, joined with search opportunity")
     p.add_argument("--posts-dir"); p.add_argument("--nginx"); p.add_argument("--config")
     p.add_argument("--md"); p.add_argument("--json")
     p.add_argument("--today", help="YYYY-MM-DD, for reproducible runs")
+    p.add_argument("--days", type=int, help="join scores from the latest import covering exactly this many days")
     p.set_defaults(fn=cmd_audit, posts_dir=None)
     p = sub.add_parser("sites", help="list Search Console properties the key can read")
     p.add_argument("--key", help="service account key file (or set GSC_SERVICE_ACCOUNT_JSON)")

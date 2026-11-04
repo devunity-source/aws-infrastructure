@@ -69,6 +69,33 @@ python -m seo_agent score --md out/opportunities.md
   says so. Reports from CSV imports still say "inferred".
 - The `declining` flag only compares windows of the same length and source.
 
+## Weekly run on the server
+
+`scripts/weekly.sh` runs everything in order: fetch new days, score a 28-day and a 90-day window,
+and audit content. It's meant for cron on the web server. The repo is public, so search data never
+goes through GitHub. The database, reports and logs live in `~/seo-agent-data` with owner-only
+permissions.
+
+Each run writes `~/seo-agent-data/reports/<date>/`, containing `opportunities-28d.md`,
+`opportunities-90d.md` and `audit.md`, plus JSON versions. `reports/latest` points at the newest
+one. Report folders older than 26 weeks are removed. The script pulls `main` first, so the agent
+stays current. It skips the pull if that fails, and it won't run twice at once.
+
+Setup, once, as the user that owns the checkout:
+
+```bash
+mkdir -p -m 700 ~/.config/seo-agent        # then put the service account key in gsc-key.json, chmod 600
+crontab -e
+# Mondays 06:17 UTC:
+17 6 * * 1 $HOME/aws-infrastructure/seo-agent/scripts/weekly.sh >> $HOME/seo-agent-data/logs/weekly.log 2>&1
+```
+
+Run it by hand with `seo-agent/scripts/weekly.sh`. Settings come from environment variables
+listed at the top of the script.
+
+`score --days N` and `audit --days N` pick the latest import covering exactly N days. Use them
+whenever several windows end on the same day.
+
 ## Content audit
 
 ```bash
@@ -123,5 +150,6 @@ seo_agent/cli.py       import / sites / fetch / window / score / audit
 seo_agent/content.py   post parser (frontmatter, headings, products, links) and nginx rules
 seo_agent/audit.py     rule-based content audit joined with opportunity scores
 seo_agent/gsc_api.py   Search Console API client: auth, pagination, retries
-tests/                 55 tests on synthetic data, with a fake API session (no real data, no network)
+scripts/weekly.sh      weekly fetch, score and audit for cron
+tests/                 56 tests on synthetic data, with a fake API session (no real data, no network)
 ```
