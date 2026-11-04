@@ -39,7 +39,7 @@ Add a file to `src/content/posts/`, for example `best-webcams.mdx`. The filename
 title: "The Best Webcams for Remote Work"
 description: "Under 170 characters, this is the meta description and card blurb."
 pubDate: 2026-10-15
-category: gadgets          # laptops | keyboards | mice | monitors | audio | gadgets
+category: gadgets          # laptops | desktops | keyboards | mice | monitors | audio | gadgets | explainers
 tags: [webcam, remote-work]
 heroImage: /images/webcams.jpg   # optional, 1200x630 works for both hero and OG
 featured: false

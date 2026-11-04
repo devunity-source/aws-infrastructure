@@ -58,6 +58,7 @@ export const CATEGORIES = {
   monitors: { label: 'Monitors', blurb: 'Displays for coding, design and everything between.' },
   audio: { label: 'Audio', blurb: 'Headphones, earbuds and desk speakers.' },
   gadgets: { label: 'Gadgets', blurb: 'Docks, chargers, wearables and desk extras.' },
+  explainers: { label: 'Explainers', blurb: 'How the tech you use every day actually works.' },
 } as const;
 
 export type CategoryKey = keyof typeof CATEGORIES;
