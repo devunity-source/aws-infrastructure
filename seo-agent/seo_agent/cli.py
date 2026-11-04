@@ -5,6 +5,7 @@
   python -m seo_agent fetch --key key.json --site sc-domain:example.com [--days 90]
   python -m seo_agent window [--days 90]            # turn fetched API days into an import
   python -m seo_agent score [--top N] [--json out.json] [--md out.md] [--posts-dir DIR]
+  python -m seo_agent audit [--md out.md] [--json out.json]   # content checks + search opportunity
 """
 from __future__ import annotations
 
@@ -18,14 +19,25 @@ from pathlib import Path
 
 from . import config as config_mod
 from .gsc_api import PAGE_DIMS, ROW_DIMS, Client, GSCAPIError, load_key, session_from_key, to_records
+from .audit import audit_posts, render_audit_md
+from .content import handled_urls, load_posts
 from .gsc_csv import GSCParseError, load_export
 from .scoring import score_pages
 from .storage import (aggregate, api_date_range, api_sites, build_window_import, connect, fetch_log,
                       latest_import, observed_query_pages, save_api_day, save_export, save_scores)
 
 DEFAULT_DB = os.environ.get("SEO_AGENT_DB", "data/seo_agent.sqlite")
-# The blog's posts, when the agent runs inside the aws-infrastructure repo.
-REPO_POSTS_DIR = Path(__file__).resolve().parents[2] / "protocloud-reviews" / "src" / "content" / "posts"
+# The blog's files, when the agent runs inside the aws-infrastructure repo.
+REPO_BLOG = Path(__file__).resolve().parents[2] / "protocloud-reviews"
+REPO_POSTS_DIR = REPO_BLOG / "src" / "content" / "posts"
+REPO_NGINX = REPO_BLOG / "deploy" / "protocloud-blog.conf"
+
+
+def nginx_path(arg: str | None) -> str | None:
+    p = arg or os.environ.get("SEO_AGENT_NGINX") or (str(REPO_NGINX) if REPO_NGINX.is_file() else None)
+    if arg and not Path(arg).is_file():
+        raise FileNotFoundError(f"--nginx {arg} is not a file")
+    return p
 
 
 def existing_slugs(posts_dir: str | None) -> set[str] | None:
@@ -171,6 +183,9 @@ def render_md(imp, results, summary, top: int) -> str:
              f"{len(summary['excluded_non_articles'])} non-article URLs excluded. "
              f"{summary['templated_query_count']} templated queries "
              f"({summary['templated_impressions']:,} impressions) treated as low signal.")
+    if summary.get("handled_urls"):
+        L += ["", f"{len(summary['handled_urls'])} retired or redirected URLs skipped "
+                  "(from the blog's nginx rules)."]
     if summary.get("dead_urls"):
         L += ["", f"**{len(summary['dead_urls'])} scored URLs have no post in the blog** (flag `dead_url`). "
                   "Restore, redirect or retire them first."]
@@ -198,13 +213,16 @@ def render_md(imp, results, summary, top: int) -> str:
     return "\n".join(L) + "\n"
 
 
-def cmd_score(a) -> int:
-    cfg = config_mod.load(a.config)
-    con = connect(a.db)
+class _Stop(Exception):
+    pass
+
+
+def _score_latest(con, a):
+    """Score the latest import. Returns (import row, results, summary)."""
+    cfg = config_mod.load(getattr(a, "config", None))
     imp = latest_import(con)
     if not imp:
-        print("error: nothing imported yet. Run: python -m seo_agent import <export.zip>", file=sys.stderr)
-        return 2
+        raise _Stop("nothing imported yet. Run: python -m seo_agent import <export.zip>")
     # Compare like with like: same source and same window length, ending earlier.
     prev = con.execute(
         "SELECT id FROM imports WHERE id<>? AND date_end<? AND source=? "
@@ -214,17 +232,27 @@ def cmd_score(a) -> int:
     previous = {r["key"]: dict(r) for r in aggregate(con, prev["id"], "page")} if prev else None
     try:
         slugs = existing_slugs(a.posts_dir)
+        handled = handled_urls(nginx_path(a.nginx))
     except FileNotFoundError as e:
-        print(f"error: {e}", file=sys.stderr)
-        return 2
+        raise _Stop(str(e)) from None
     observed = (observed_query_pages(con, imp["date_start"], imp["date_end"])
                 if imp["source"] == "api" else None)
     results, summary = score_pages(_rows(aggregate(con, imp["id"], "page")),
                                    _rows(aggregate(con, imp["id"], "query")), cfg, previous, slugs,
-                                   observed)
+                                   observed, handled)
     for r in results:
         r.flags = sorted(set(r.flags))
     save_scores(con, imp["id"], results)
+    return imp, results, summary
+
+
+def cmd_score(a) -> int:
+    con = connect(a.db)
+    try:
+        imp, results, summary = _score_latest(con, a)
+    except _Stop as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
     md = render_md(imp, results, summary, a.top)
     for f in (a.md, a.json):
         if f:
@@ -234,6 +262,43 @@ def cmd_score(a) -> int:
     if a.json:
         json.dump({"import": dict(imp), "summary": summary,
                    "pages": [asdict(r) for r in results]}, open(a.json, "w"), indent=2)
+    print(md if not a.md else f"wrote {a.md}")
+    return 0
+
+
+def cmd_audit(a) -> int:
+    posts_dir = a.posts_dir or os.environ.get("SEO_AGENT_POSTS_DIR") or str(REPO_POSTS_DIR)
+    if not Path(posts_dir).is_dir():
+        print(f"error: posts folder {posts_dir} not found. Pass --posts-dir.", file=sys.stderr)
+        return 2
+    try:
+        posts = load_posts(posts_dir)
+        handled = handled_urls(nginx_path(a.nginx))
+    except (FileNotFoundError, ValueError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
+    scores, basis = {}, None
+    if Path(a.db).is_file():
+        con = connect(a.db)
+        try:
+            _, results, summary = _score_latest(con, a)
+            from .scoring import slug_of
+            cfg = config_mod.load(None)
+            scores = {slug_of(r.page, cfg): {"score": r.score, "flags": r.flags, "metrics": r.metrics}
+                      for r in results}
+            basis = summary["query_mapping"]
+        except _Stop:
+            pass  # no imports yet: audit content only
+    today = date.fromisoformat(a.today) if a.today else date.today()
+    audits = audit_posts(posts, handled, scores, today)
+    md = render_audit_md(audits, today, basis)
+    for f in (a.md, a.json):
+        if f:
+            os.makedirs(os.path.dirname(f) or ".", exist_ok=True)
+    if a.md:
+        open(a.md, "w").write(md)
+    if a.json:
+        json.dump([x.to_dict() for x in audits], open(a.json, "w"), indent=2)
     print(md if not a.md else f"wrote {a.md}")
     return 0
 
@@ -248,7 +313,14 @@ def main(argv=None) -> int:
     p.add_argument("--json"); p.add_argument("--md")
     p.add_argument("--posts-dir", help="blog posts folder, for the dead_url check. "
                    "Defaults to protocloud-reviews/src/content/posts in this repo.")
+    p.add_argument("--nginx", help="blog nginx snippet with 410 and 301 rules. "
+                   "Defaults to protocloud-reviews/deploy/protocloud-blog.conf in this repo.")
     p.set_defaults(fn=cmd_score)
+    p = sub.add_parser("audit", help="content checks on every post, joined with search opportunity")
+    p.add_argument("--posts-dir"); p.add_argument("--nginx"); p.add_argument("--config")
+    p.add_argument("--md"); p.add_argument("--json")
+    p.add_argument("--today", help="YYYY-MM-DD, for reproducible runs")
+    p.set_defaults(fn=cmd_audit, posts_dir=None)
     p = sub.add_parser("sites", help="list Search Console properties the key can read")
     p.add_argument("--key", help="service account key file (or set GSC_SERVICE_ACCOUNT_JSON)")
     p.set_defaults(fn=cmd_sites)
