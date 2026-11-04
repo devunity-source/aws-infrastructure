@@ -4,7 +4,11 @@ Two queries per day, because Google drops anonymised queries from any result
 grouped by query:
 
 - ROW_DIMS (with query) gives the observed query x page join.
-- PAGE_DIMS (without query) gives complete page totals, anonymised traffic included.
+- PAGE_DIMS (date and page only) gives complete page totals, anonymised traffic included.
+
+Keep PAGE_DIMS to date and page. Adding device or country makes Google apply the
+same privacy filter it uses for queries: on protocloudsolutions.com, Aug to Nov
+2026, page totals fell from 9,093 to 5,043 impressions and from 24 to 4 clicks.
 
 Auth uses a service account key. google-auth and requests are optional
 dependencies (`pip install -e '.[api]'`), imported only when a real session
@@ -23,7 +27,7 @@ API = "https://www.googleapis.com/webmasters/v3"
 SCOPE = "https://www.googleapis.com/auth/webmasters.readonly"
 ROW_LIMIT = 25_000  # API maximum per call
 ROW_DIMS = ["date", "page", "query", "device", "country"]
-PAGE_DIMS = ["date", "page", "device", "country"]
+PAGE_DIMS = ["date", "page"]
 RETRY_STATUS = {429, 500, 502, 503, 504}
 
 
