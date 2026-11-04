@@ -148,6 +148,27 @@ def assign_queries(slugs: list[str], queries: list[dict], cfg: dict):
     return by_page, shared
 
 
+def observed_assignment(observed: dict[str, list[dict]], slugs: set[str], templated: set[str], cfg: dict):
+    """Same shape as assign_queries, built from the API's real query x page rows."""
+    by_page: dict[str, list[dict]] = defaultdict(list)
+    per_query: dict[str, dict[str, dict]] = defaultdict(dict)
+    for url, qs in observed.items():
+        s = slug_of(url, cfg)
+        if s not in slugs:
+            continue
+        for q in qs:
+            if is_brand(q["key"], cfg):
+                continue
+            by_page[s].append(q)
+            per_query[q["key"]][s] = q
+    shared: dict[tuple, list[dict]] = defaultdict(list)
+    for key, on_pages in per_query.items():
+        if len(on_pages) > 1 and key not in templated:
+            shared[tuple(sorted(on_pages))].append(
+                {"key": key, "impressions": sum(q["impressions"] for q in on_pages.values())})
+    return by_page, shared
+
+
 # ---------- components ----------
 
 def expected_ctr(pos: float, cfg: dict) -> float:
@@ -168,11 +189,14 @@ def position_component(pos: float, cfg: dict) -> float:
 
 def score_pages(pages: list[dict], queries: list[dict], cfg: dict,
                 previous: dict[str, dict] | None = None,
-                existing_slugs: set[str] | None = None) -> tuple[list[PageScore], dict]:
+                existing_slugs: set[str] | None = None,
+                observed: dict[str, list[dict]] | None = None) -> tuple[list[PageScore], dict]:
     """pages/queries: dicts with key, clicks, impressions, ctr, position.
 
     existing_slugs: slugs that have a post in the blog. When given, scored pages
     without a post get a dead_url flag. None skips the check.
+    observed: page URL -> its queries, from the Search Console API join. When given,
+    queries are mapped to pages from real data instead of inferred from wording.
     """
     w = cfg["weights"]
     articles = {}
@@ -183,9 +207,14 @@ def score_pages(pages: list[dict], queries: list[dict], cfg: dict,
 
     nonbrand = [q for q in queries if not is_brand(q["key"], cfg)]
     templated = template_families([q["key"] for q in nonbrand], cfg)
-    by_page, _ = assign_queries(list(articles), nonbrand, cfg)
-    # Cannibalisation only on real-looking queries; templated noise inflates overlap.
-    _, shared = assign_queries(list(articles), [q for q in nonbrand if q["key"] not in templated], cfg)
+    if observed is None:
+        basis = "inferred"
+        by_page, _ = assign_queries(list(articles), nonbrand, cfg)
+        # Cannibalisation only on real-looking queries; templated noise inflates overlap.
+        _, shared = assign_queries(list(articles), [q for q in nonbrand if q["key"] not in templated], cfg)
+    else:
+        basis = "observed"
+        by_page, shared = observed_assignment(observed, set(articles), templated, cfg)
 
     results = []
     for slug, p in articles.items():
@@ -230,7 +259,7 @@ def score_pages(pages: list[dict], queries: list[dict], cfg: dict,
             rel = 1 - tmpl_imp / q_imp
             if tmpl_imp / q_imp >= 0.3:
                 flags.append("templated_queries")
-                reasons.append(f"{tmpl_imp / q_imp:.0%} of inferred query impressions come from "
+                reasons.append(f"{tmpl_imp / q_imp:.0%} of {basis} query impressions come from "
                                "templated 'best X for <random audience>' queries. Low signal: "
                                "don't chase them with new sections.")
         else:
@@ -282,7 +311,8 @@ def score_pages(pages: list[dict], queries: list[dict], cfg: dict,
         if imp >= 20:
             cannibal.append({"pages": list(pair), "shared_impressions": imp,
                              "examples": [q["key"] for q in sorted(qs, key=lambda q: -q["impressions"])[:5]],
-                             "basis": "inferred from query wording (CSV has no query x page join)"})
+                             "basis": ("observed in Search Console API data" if basis == "observed" else
+                                       "inferred from query wording (CSV has no query x page join)")})
     cannibal.sort(key=lambda c: -c["shared_impressions"])
     for c in cannibal:
         for r in results:
@@ -291,11 +321,14 @@ def score_pages(pages: list[dict], queries: list[dict], cfg: dict,
                 r.flags.append("possible_cannibalisation")
                 r.reasons.append(f"Possible overlap with /{', /'.join(other)} on "
                                  f"{c['shared_impressions']:,} impressions of shared queries "
-                                 "(inferred). Confirm with page+query API data before merging.")
+                                 + ("(observed in Search Console). Check the shared queries before merging pages."
+                                    if basis == "observed" else
+                                    "(inferred). Confirm with page+query API data before merging."))
 
     results.sort(key=lambda r: -r.score)
     excluded = [p["key"] for p in pages if not slug_of(p["key"], cfg)]
     summary = {"articles_scored": len(results), "excluded_non_articles": excluded,
+               "query_mapping": basis,
                "dead_urls": [r.page for r in results if "dead_url" in r.flags],
                "brand_queries": [q["key"] for q in queries if is_brand(q["key"], cfg)],
                "templated_query_count": len(templated),
