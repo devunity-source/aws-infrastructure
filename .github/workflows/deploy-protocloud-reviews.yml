@@ -46,10 +46,15 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.BLOG_DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "${{ secrets.BLOG_DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+          # Pinned host key (SHA256:MPquXpviMzx/HsbOayqOqtdAoCWULx9T3z+5ESrOweY), so a
+          # spoofed server can't receive the deploy. Update it if the server is rebuilt.
+          echo "${{ secrets.BLOG_DEPLOY_HOST }} ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGbJFPmYld0xQI0apA9QzTSZeR50pjutgrAruC3x7MgC" >> ~/.ssh/known_hosts
 
       - name: Rsync to server
         if: steps.secrets.outputs.ready == 'true'
         run: |
-          rsync -az --delete -e "ssh -i ~/.ssh/deploy_key" dist/ \
-            "${{ secrets.BLOG_DEPLOY_USER }}@${{ secrets.BLOG_DEPLOY_HOST }}:${{ secrets.BLOG_DEPLOY_PATH || '/var/www/html/protocloud-reviews/blog' }}/"
+          # The deploy key is locked on the server to `rrsync -wo <blog folder>`, which
+          # treats every path as relative to that folder. ./ is the blog folder itself.
+          # An absolute path would land in a nested <blog folder>/var/www/... instead.
+          rsync -az --delete -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes" dist/ \
+            "${{ secrets.BLOG_DEPLOY_USER }}@${{ secrets.BLOG_DEPLOY_HOST }}:./"
