@@ -94,9 +94,19 @@ sudo nginx -t && sudo systemctl reload nginx
 Repository secrets it needs:
 
 - `BLOG_DEPLOY_HOST`: server hostname or IP
-- `BLOG_DEPLOY_USER`: ssh user with write access to the web root
-- `BLOG_DEPLOY_SSH_KEY`: private key for that user
-- `BLOG_DEPLOY_PATH`: optional, defaults to `/var/www/html/protocloud-reviews/blog`
+- `BLOG_DEPLOY_USER`: ssh user that owns the blog web root (`webserver`)
+- `BLOG_DEPLOY_SSH_KEY`: a key used only for deploys
+
+The deploy key is locked down on the server. Its line in `~webserver/.ssh/authorized_keys` starts with
+`restrict,command="/usr/bin/rrsync -wo /var/www/html/protocloud-reviews/blog"`, so it can only write
+into the blog folder. It can't open a shell, read files or forward ports. rrsync treats every path as
+relative to that folder, which is why the workflow uploads to `./`.
+
+The workflow pins the server's SSH host key. If the server is rebuilt, update the `known_hosts` line in
+the workflow with the output of `ssh-keyscan -t ed25519 <host>`, after checking its fingerprint.
+
+To rotate the deploy key: generate a new one, replace its line in `authorized_keys` (keeping the
+`restrict,command=...` prefix), and update the `BLOG_DEPLOY_SSH_KEY` secret.
 
 ## AdSense approval checklist
 
