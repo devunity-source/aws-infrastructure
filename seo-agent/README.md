@@ -96,6 +96,41 @@ listed at the top of the script.
 `score --days N` and `audit --days N` pick the latest import covering exactly N days. Use them
 whenever several windows end on the same day.
 
+## Dashboard
+
+`dashboard --out DIR` writes one self-contained `index.html` with four views and a page per article:
+
+- **Overview:** 28-day clicks, impressions, CTR and position against the previous 28 days, weekly
+  charts, top opportunities and an audit summary.
+- **Opportunities:** every scored page for the 28- or 90-day window, sortable, with a filter.
+- **Audit:** every issue, filtered by severity or issue type.
+- **Trends:** weekly site-wide charts, plus each page's last 4 full weeks against the 4 before.
+- **Page view:** scores, the reasons behind them, weekly charts, audit issues, the searches that
+  showed the page, and score history.
+
+The page makes no external requests. Data is embedded as JSON that can't break out of its tag, every
+Search Console string is escaped when shown, and the inline script is pinned by hash in a CSP meta tag.
+
+The weekly run rebuilds it into `/var/www/html/seo-dashboard/`, and nginx serves it at
+`https://protocloudsolutions.com/seo/` behind a password. One-time setup on the server:
+
+```bash
+# Folder the weekly run writes and nginx reads
+sudo install -d -o webserver -g www-data -m 2750 /var/www/html/seo-dashboard
+# Password file (prompts for a password)
+printf 'rakan:%s\n' "$(openssl passwd -apr1)" | sudo tee /etc/nginx/seo-dashboard.htpasswd >/dev/null
+sudo chown root:www-data /etc/nginx/seo-dashboard.htpasswd && sudo chmod 640 /etc/nginx/seo-dashboard.htpasswd
+# nginx: the snippet goes next to the blog's
+sudo cp ~/aws-infrastructure/seo-agent/deploy/seo-dashboard.conf /etc/nginx/snippets/
+sudo sed -i 's#^\(\s*\)include snippets/protocloud-blog.conf;#&\n\1include snippets/seo-dashboard.conf;#' \
+  /etc/nginx/sites-available/protocloudsolutions.com
+sudo nginx -t && sudo systemctl reload nginx
+# First build
+~/aws-infrastructure/seo-agent/scripts/weekly.sh
+```
+
+If the folder is missing or not writable, the weekly run skips the dashboard and still writes the reports.
+
 ## Content audit
 
 ```bash
@@ -150,6 +185,8 @@ seo_agent/cli.py       import / sites / fetch / window / score / audit
 seo_agent/content.py   post parser (frontmatter, headings, products, links) and nginx rules
 seo_agent/audit.py     rule-based content audit joined with opportunity scores
 seo_agent/gsc_api.py   Search Console API client: auth, pagination, retries
-scripts/weekly.sh      weekly fetch, score and audit for cron
-tests/                 56 tests on synthetic data, with a fake API session (no real data, no network)
+seo_agent/dashboard.py static dashboard builder (templates/dashboard.html)
+scripts/weekly.sh      weekly fetch, score, audit and dashboard for cron
+deploy/                nginx snippet for the dashboard
+tests/                 60 tests on synthetic data, with a fake API session (no real data, no network)
 ```

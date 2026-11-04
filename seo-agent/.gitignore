@@ -9,3 +9,7 @@ __pycache__/
 gsc-exports/
 reports/
 *.zip
+
+# Packaging artifacts
+build/
+*.egg-info/

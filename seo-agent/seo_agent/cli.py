@@ -6,6 +6,7 @@
   python -m seo_agent window [--days 90]            # turn fetched API days into an import
   python -m seo_agent score [--top N] [--json out.json] [--md out.md] [--posts-dir DIR]
   python -m seo_agent audit [--md out.md] [--json out.json]   # content checks + search opportunity
+  python -m seo_agent dashboard --out DIR             # private static dashboard (index.html)
 """
 from __future__ import annotations
 
@@ -14,6 +15,7 @@ import json
 import os
 import sys
 from dataclasses import asdict
+from types import SimpleNamespace
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -21,6 +23,7 @@ from . import config as config_mod
 from .gsc_api import PAGE_DIMS, ROW_DIMS, Client, GSCAPIError, load_key, session_from_key, to_records
 from .audit import audit_posts, render_audit_md
 from .content import handled_urls, load_posts
+from .dashboard import build_data, render, write
 from .gsc_csv import GSCParseError, load_export
 from .scoring import score_pages
 from .storage import (aggregate, api_date_range, api_sites, build_window_import, connect, fetch_log,
@@ -305,6 +308,40 @@ def cmd_audit(a) -> int:
     return 0
 
 
+def cmd_dashboard(a) -> int:
+    if not Path(a.db).is_file():
+        print(f"error: no database at {a.db}. Run fetch and window first.", file=sys.stderr)
+        return 2
+    posts_dir = a.posts_dir or os.environ.get("SEO_AGENT_POSTS_DIR") or str(REPO_POSTS_DIR)
+    try:
+        posts = load_posts(posts_dir) if Path(posts_dir).is_dir() else {}
+        handled = handled_urls(nginx_path(a.nginx))
+    except (FileNotFoundError, ValueError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
+    con = connect(a.db)
+    cfg = config_mod.load(a.config)
+    windows = {}
+    for d in (28, 90):
+        ns = SimpleNamespace(days=d, posts_dir=a.posts_dir, nginx=a.nginx, config=a.config)
+        try:
+            windows[d] = _score_latest(con, ns)
+        except _Stop:
+            pass
+    if not windows:
+        print("error: no 28- or 90-day window yet. Run: python -m seo_agent window --days 28", file=sys.stderr)
+        return 2
+    from .scoring import slug_of
+    _, results, _ = windows.get(90) or windows[28]
+    scores = {slug_of(r.page, cfg): {"score": r.score, "flags": r.flags, "metrics": r.metrics} for r in results}
+    today = date.fromisoformat(a.today) if a.today else date.today()
+    audits = audit_posts(posts, handled, scores, today) if posts else []
+    path = write(a.out, render(build_data(con, cfg, windows, audits, posts, handled)))
+    print(f"wrote {path} ({path.stat().st_size // 1024} KB): windows {sorted(windows)}, "
+          f"{len(audits)} posts audited")
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="seo-agent")
     ap.add_argument("--db", default=DEFAULT_DB)
@@ -325,6 +362,11 @@ def main(argv=None) -> int:
     p.add_argument("--today", help="YYYY-MM-DD, for reproducible runs")
     p.add_argument("--days", type=int, help="join scores from the latest import covering exactly this many days")
     p.set_defaults(fn=cmd_audit, posts_dir=None)
+    p = sub.add_parser("dashboard", help="build the private static dashboard (index.html)")
+    p.add_argument("--out", required=True, help="folder to write index.html into")
+    p.add_argument("--posts-dir"); p.add_argument("--nginx"); p.add_argument("--config")
+    p.add_argument("--today", help="YYYY-MM-DD, for reproducible runs")
+    p.set_defaults(fn=cmd_dashboard)
     p = sub.add_parser("sites", help="list Search Console properties the key can read")
     p.add_argument("--key", help="service account key file (or set GSC_SERVICE_ACCOUNT_JSON)")
     p.set_defaults(fn=cmd_sites)

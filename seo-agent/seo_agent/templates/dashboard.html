@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src '__CSP_SCRIPT_HASH__'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<title>SEO dashboard · Protocloud Reviews</title>
+<style>
+:root {
+  --bg: #f5f4ef; --card: #ffffff; --ink: #121210; --muted: #6d6b64; --line: #e3e1d9;
+  --accent: #0f6c6b; --accent-soft: #e2f0ef; --up: #1b7f3b; --down: #c0392b;
+  --high: #c62a3a; --medium: #e08a1e; --low: #8b8a83;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--sans); }
+a { color: inherit; }
+header { position: sticky; top: 0; z-index: 2; background: var(--ink); color: #fff; }
+.bar { max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; gap: 24px; height: 56px; }
+.brand { font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; }
+.brand span { display: inline-block; width: 10px; height: 10px; background: #3fd0c9; margin-right: 8px; }
+nav { display: flex; gap: 4px; overflow-x: auto; }
+nav a { text-decoration: none; padding: 6px 12px; color: #c9c7bf; border-radius: 4px; white-space: nowrap; }
+nav a.on, nav a:hover { color: #fff; background: #2a2a26; }
+.fresh { margin-left: auto; font: 12px var(--mono); color: #a7a59d; white-space: nowrap; }
+main { max-width: 1200px; margin: 0 auto; padding: 28px 20px 64px; }
+h1 { font-size: 28px; letter-spacing: -0.02em; margin: 0 0 4px; }
+h2 { font-size: 16px; text-transform: uppercase; letter-spacing: 0.06em; margin: 32px 0 12px; }
+.sub { color: var(--muted); margin: 0 0 20px; }
+.grid { display: grid; gap: 12px; }
+.kpis { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.two { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; }
+.kpi .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.kpi .value { font: 600 30px/1.2 var(--mono); margin: 6px 0 2px; }
+.delta { font: 12px var(--mono); }
+.delta.up { color: var(--up); } .delta.down { color: var(--down); } .delta.flat { color: var(--muted); }
+.muted { color: var(--muted); }
+table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); background: #fbfaf7; white-space: nowrap; user-select: none; }
+th[data-sort] { cursor: pointer; } th[data-sort]:hover { color: var(--ink); }
+th.sorted::after { content: " ▾"; } th.sorted.asc::after { content: " ▴"; }
+td.num, th.num { text-align: right; font-family: var(--mono); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: #faf9f5; }
+.tbl-wrap { overflow-x: auto; }
+.chip { display: inline-block; font: 11px/1.6 var(--mono); padding: 0 7px; border-radius: 3px; background: #efede6; color: #4a4943; margin: 1px 4px 1px 0; white-space: nowrap; }
+.chip.warn { background: #fdecd9; color: #8a4b05; } .chip.bad { background: #fbe1e3; color: #8c1a26; }
+.sev { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: 1px; }
+.sev.high { background: var(--high); } .sev.medium { background: var(--medium); } .sev.low { background: var(--low); }
+.score { display: inline-block; min-width: 40px; text-align: center; font: 600 13px var(--mono); padding: 2px 6px; border-radius: 3px; background: var(--accent-soft); color: var(--accent); }
+.score.hot { background: var(--accent); color: #fff; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 14px; }
+button.tab, select, input[type=search] { font: inherit; border: 1px solid var(--line); background: var(--card); padding: 6px 12px; border-radius: 4px; color: var(--ink); }
+button.tab { cursor: pointer; } button.tab.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+input[type=search] { min-width: 240px; }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart .title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 6px; }
+.issues li { margin: 6px 0; }
+.issues .ev { color: var(--muted); font-size: 13px; }
+ul.plain { list-style: none; padding: 0; margin: 0; }
+.post-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; }
+.empty { padding: 28px; text-align: center; color: var(--muted); }
+.note { font-size: 13px; color: var(--muted); margin-top: 8px; }
+@media (max-width: 640px) { .fresh { display: none; } .kpi .value { font-size: 24px; } }
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <div class="brand"><span></span>SEO dashboard</div>
+  <nav id="nav">
+    <a href="#/overview" data-nav="overview">Overview</a>
+    <a href="#/opportunities" data-nav="opportunities">Opportunities</a>
+    <a href="#/audit" data-nav="audit">Audit</a>
+    <a href="#/trends" data-nav="trends">Trends</a>
+  </nav>
+  <div class="fresh" id="fresh"></div>
+</div></header>
+<main id="main"></main>
+<script id="data" type="application/json">__DATA__</script>
+<script id="app">
+(function () {
+  "use strict";
+  var D = JSON.parse(document.getElementById("data").textContent);
+  var state = { win: "28", sort: {}, q: "", sev: "all", issue: "all" };
+  var main = document.getElementById("main");
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  var num = function (n) { return n == null ? "n/a" : Math.round(n).toLocaleString("en-US"); };
+  var pct = function (x) { return x == null ? "n/a" : (x * 100).toFixed(2) + "%"; };
+  var pos = function (p) { return p == null ? "n/a" : Number(p).toFixed(1); };
+  var day = function (s) {
+    if (!s) return "n/a";
+    return new Date(s.slice(0, 10) + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  };
+  var short = function (s) {
+    return new Date(s + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+  };
+  function pageLink(slug, label) {
+    return '<a href="#/page/' + encodeURIComponent(slug) + '">' + esc(label || slug) + "</a>";
+  }
+  function scoreBadge(s) {
+    return '<span class="score' + (s >= 75 ? " hot" : "") + '">' + Math.round(s) + "</span>";
+  }
+  var FLAG_CLASS = { zero_clicks: "warn", dead_url: "bad", declining: "bad", year_in_queries: "warn",
+                     possible_cannibalisation: "warn" };
+  function flags(list) {
+    return (list || []).map(function (f) {
+      return '<span class="chip ' + (FLAG_CLASS[f] || "") + '">' + esc(f.replace(/_/g, " ")) + "</span>";
+    }).join("");
+  }
+  function delta(cur, prev, lowerIsBetter, asPct, asPositions) {
+    if (cur == null || prev == null || prev === 0) return '<div class="delta flat">no previous period</div>';
+    if (asPositions) {
+      var dp = cur - prev, better = dp < 0;
+      var c = Math.abs(dp) < 0.05 ? "flat" : better ? "up" : "down";
+      return '<div class="delta ' + c + '">' + (better ? "▲ " : dp > 0 ? "▼ " : "") + Math.abs(dp).toFixed(1) +
+             " positions " + (better ? "better" : dp > 0 ? "worse" : "") + " vs previous 28 days</div>";
+    }
+    var d = (cur - prev) / Math.abs(prev);
+    var good = lowerIsBetter ? d < 0 : d > 0;
+    var cls = Math.abs(d) < 0.005 ? "flat" : good ? "up" : "down";
+    var arrow = d > 0 ? "▲" : d < 0 ? "▼" : "";
+    var abs = asPct ? (Math.abs(cur - prev) * 100).toFixed(2) + " pts" : (Math.abs(d) * 100).toFixed(0) + "%";
+    return '<div class="delta ' + cls + '">' + arrow + " " + abs + " vs previous 28 days</div>";
+  }
+
+  // ---------- charts (inline SVG) ----------
+  function chart(points, key, opts) {
+    opts = opts || {};
+    var W = opts.wide ? 1280 : 640, H = opts.height || 150, L = 52, R = 12, T = 12, B = 24;
+    var vals = points.map(function (p) { return p[key]; });
+    var valid = vals.filter(function (v) { return v != null; });
+    if (!valid.length) return '<p class="muted">No data yet.</p>';
+    var lo = opts.invert ? Math.min.apply(null, valid) : 0, hi = Math.max.apply(null, valid);
+    if (hi === lo) hi = lo + 1;
+    var x = function (i) { return L + (points.length < 2 ? (W - L - R) / 2 : i * (W - L - R) / (points.length - 1)); };
+    var y = function (v) {
+      var f = (v - lo) / (hi - lo);
+      return opts.invert ? T + f * (H - T - B) : H - B - f * (H - T - B);
+    };
+    var color = opts.color || "var(--accent)";
+    var out = ['<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(opts.label || key) + '">'];
+    [lo, hi].forEach(function (v) {
+      out.push('<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="var(--line)"/>');
+      out.push('<text x="' + (L - 8) + '" y="' + (y(v) + 4) + '" font-size="11" text-anchor="end" fill="var(--muted)" font-family="var(--mono)">' +
+               esc(opts.fmt ? opts.fmt(v) : num(v)) + "</text>");
+    });
+    if (opts.bars) {
+      var bw = Math.max(4, (W - L - R) / Math.max(points.length, 1) * 0.6);
+      points.forEach(function (p, i) {
+        if (p[key] == null) return;
+        out.push('<rect x="' + (x(i) - bw / 2) + '" y="' + y(p[key]) + '" width="' + bw + '" height="' + (H - B - y(p[key])) +
+                 '" fill="' + color + '" opacity="' + (p.partial ? 0.35 : 0.85) + '"><title>' +
+                 esc(short(p.week) + ": " + (opts.fmt ? opts.fmt(p[key]) : num(p[key])) + (p.partial ? " (partial week)" : "")) + "</title></rect>");
+      });
+    } else {
+      var d = "", pen = false;
+      points.forEach(function (p, i) {
+        if (p[key] == null) { pen = false; return; }
+        d += (pen ? "L" : "M") + x(i).toFixed(1) + " " + y(p[key]).toFixed(1) + " "; pen = true;
+      });
+      out.push('<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2"/>');
+      points.forEach(function (p, i) {
+        if (p[key] == null) return;
+        out.push('<circle cx="' + x(i) + '" cy="' + y(p[key]) + '" r="3.5" fill="' + (p.partial ? "#fff" : color) + '" stroke="' + color + '"><title>' +
+                 esc(short(p.week) + ": " + (opts.fmt ? opts.fmt(p[key]) : num(p[key])) + (p.partial ? " (partial week)" : "")) + "</title></circle>");
+      });
+    }
+    if (points.length) {
+      out.push('<text x="' + L + '" y="' + (H - 6) + '" font-size="11" fill="var(--muted)">' + esc(short(points[0].week)) + "</text>");
+      out.push('<text x="' + (W - R) + '" y="' + (H - 6) + '" font-size="11" text-anchor="end" fill="var(--muted)">' +
+               esc("week of " + short(points[points.length - 1].week)) + "</text>");
+    }
+    out.push("</svg>");
+    return out.join("");
+  }
+  function chartCard(title, points, key, opts) {
+    return '<div class="card chart"><div class="title">' + esc(title) + "</div>" + chart(points, key, opts) + "</div>";
+  }
+  function spark(points, key) {
+    var vals = points.map(function (p) { return p[key] || 0; });
+    var hi = Math.max.apply(null, vals.concat([1])), W = 120, H = 28;
+    var d = vals.map(function (v, i) {
+      return (i ? "L" : "M") + (vals.length < 2 ? W / 2 : i * W / (vals.length - 1)).toFixed(1) + " " + (H - 2 - v / hi * (H - 4)).toFixed(1);
+    }).join(" ");
+    return '<svg viewBox="0 0 ' + W + " " + H + '" width="120" height="28" aria-hidden="true"><path d="' + d + '" fill="none" stroke="var(--accent)" stroke-width="1.5"/></svg>';
+  }
+
+  // ---------- sortable tables ----------
+  function sortRows(rows, id, defKey, defDir) {
+    var s = state.sort[id] || { key: defKey, dir: defDir };
+    var dir = s.dir === "asc" ? 1 : -1;
+    return rows.slice().sort(function (a, b) {
+      var va = a[s.key], vb = b[s.key];
+      if (va == null && vb == null) return 0;
+      if (va == null) return 1;
+      if (vb == null) return -1;
+      return (typeof va === "string" ? va.localeCompare(vb) : va - vb) * dir;
+    });
+  }
+  function th(id, key, label, cls, defKey, defDir) {
+    var s = state.sort[id] || { key: defKey, dir: defDir };
+    var on = s.key === key;
+    return '<th class="' + (cls || "") + (on ? " sorted" + (s.dir === "asc" ? " asc" : "") : "") +
+           '" data-sort="' + esc(key) + '" data-table="' + esc(id) + '">' + esc(label) + "</th>";
+  }
+
+  // ---------- views ----------
+  function win(d) { return D.windows[d]; }
+
+  function overview() {
+    var k = D.kpis, out = ['<h1>Overview</h1><p class="sub">Search Console data from ' + day(D.data_from) + " to " + day(D.data_to) + ".</p>"];
+    if (k) {
+      var c = k.current, p = k.previous;
+      out.push('<div class="grid kpis">');
+      [["Clicks, last 28 days", num(c.clicks), delta(c.clicks, p.clicks)],
+       ["Impressions", num(c.impressions), delta(c.impressions, p.impressions)],
+       ["Click-through rate", pct(c.ctr), delta(c.ctr, p.ctr, false, true)],
+       ["Average position", pos(c.position), delta(c.position, p.position, true, false, true)]].forEach(function (t) {
+        out.push('<div class="card kpi"><div class="label">' + t[0] + '</div><div class="value">' + t[1] + "</div>" + t[2] + "</div>");
+      });
+      out.push("</div>");
+    }
+    out.push('<h2>Weekly</h2><div class="grid two">' +
+             chartCard("Impressions per week", D.weeks, "impressions", { bars: true }) +
+             chartCard("Clicks per week", D.weeks, "clicks", { bars: true, color: "#1b7f3b" }) + "</div>");
+    if (D.weeks.some(function (w) { return w.partial; })) out.push('<p class="note">Faded bars are weeks with less than seven days of data.</p>');
+
+    var w = win("28") || win("90");
+    if (w) {
+      out.push("<h2>Top opportunities</h2>");
+      out.push('<div class="tbl-wrap"><table><thead><tr><th>Page</th><th class="num">Score</th><th class="num">Impressions</th><th class="num">Clicks</th><th class="num">Position</th><th>Flags</th></tr></thead><tbody>');
+      w.pages.slice(0, 8).forEach(function (r) {
+        out.push("<tr><td>" + pageLink(r.slug) + '</td><td class="num">' + scoreBadge(r.score) + '</td><td class="num">' + num(r.metrics.impressions) +
+                 '</td><td class="num">' + num(r.metrics.clicks) + '</td><td class="num">' + pos(r.metrics.position) + "</td><td>" + flags(r.flags) + "</td></tr>");
+      });
+      out.push("</tbody></table></div>");
+      out.push('<p class="note">From the ' + (w === win("28") ? "28" : "90") + "-day window. Queries mapped to pages: " + esc(w.query_mapping) + '. <a href="#/opportunities">All opportunities</a></p>');
+    }
+
+    var counts = { high: 0, medium: 0, low: 0 }, byId = {};
+    D.audit.forEach(function (a) { a.issues.forEach(function (i) { counts[i.severity]++; byId[i.id] = (byId[i.id] || 0) + 1; }); });
+    out.push('<h2>Content audit</h2><div class="grid kpis">');
+    ["high", "medium", "low"].forEach(function (s) {
+      out.push('<div class="card kpi"><div class="label"><span class="sev ' + s + '"></span>' + s + ' severity</div><div class="value">' + counts[s] + "</div></div>");
+    });
+    out.push("</div>");
+    var top = Object.keys(byId).sort(function (a, b) { return byId[b] - byId[a]; }).slice(0, 6);
+    if (top.length) {
+      out.push('<p class="note">Most common: ' + top.map(function (id) { return esc(id.replace(/_/g, " ")) + " (" + byId[id] + ")"; }).join(", ") +
+               '. <a href="#/audit">Full audit</a></p>');
+    }
+    var handled = Object.keys(D.handled || {});
+    if (handled.length) out.push('<p class="note">' + handled.length + " retired or redirected URLs are left out of scoring.</p>");
+    return out.join("");
+  }
+
+  function opportunities() {
+    var w = win(state.win);
+    var out = ['<h1>Opportunities</h1><p class="sub">Pages ranked by how much a change could pay off. Score is 0 to 100.</p>',
+               '<div class="controls">'];
+    ["28", "90"].forEach(function (d) {
+      if (win(d)) out.push('<button class="tab' + (state.win === d ? " on" : "") + '" data-act="win" data-val="' + d + '">' + d + " days</button>");
+    });
+    out.push('<input type="search" placeholder="Filter pages" data-act="q" value="' + esc(state.q) + '"></div>');
+    if (!w) return out.join("") + '<div class="card empty">No ' + state.win + "-day window built yet.</div>";
+    out.push('<p class="note">' + day(w.start) + " to " + day(w.end) + ". Queries mapped to pages: " + esc(w.query_mapping) + ".</p>");
+    var rows = w.pages.map(function (r) {
+      return { slug: r.slug, score: r.score, impressions: r.metrics.impressions, clicks: r.metrics.clicks,
+               ctr: r.metrics.ctr, position: r.metrics.position, flags: r.flags };
+    }).filter(function (r) { return !state.q || r.slug.indexOf(state.q.toLowerCase()) !== -1; });
+    rows = sortRows(rows, "opp", "score", "desc");
+    out.push('<div class="tbl-wrap"><table><thead><tr>' + th("opp", "slug", "Page", "", "score", "desc") +
+             th("opp", "score", "Score", "num", "score", "desc") + th("opp", "impressions", "Impressions", "num", "score", "desc") +
+             th("opp", "clicks", "Clicks", "num", "score", "desc") + th("opp", "ctr", "CTR", "num", "score", "desc") +
+             th("opp", "position", "Position", "num", "score", "desc") + "<th>Flags</th></tr></thead><tbody>");
+    rows.forEach(function (r) {
+      out.push("<tr><td>" + pageLink(r.slug) + '</td><td class="num">' + scoreBadge(r.score) + '</td><td class="num">' + num(r.impressions) +
+               '</td><td class="num">' + num(r.clicks) + '</td><td class="num">' + pct(r.ctr) + '</td><td class="num">' + pos(r.position) +
+               "</td><td>" + flags(r.flags) + "</td></tr>");
+    });
+    if (!rows.length) out.push('<tr><td colspan="7" class="empty">No pages match.</td></tr>');
+    out.push("</tbody></table></div>");
+    if (w.cannibalisation.length) {
+      out.push("<h2>Pages sharing searches</h2><ul class=\"plain\">");
+      w.cannibalisation.forEach(function (c) {
+        out.push("<li>" + c.pages.map(function (s) { return pageLink(s); }).join(" and ") + ": " + num(c.shared_impressions) +
+                 " impressions, e.g. " + c.examples.slice(0, 3).map(function (q) { return "<em>" + esc(q) + "</em>"; }).join(", ") + "</li>");
+      });
+      out.push("</ul>");
+    }
+    return out.join("");
+  }
+
+  function audit() {
+    var ids = {};
+    D.audit.forEach(function (a) { a.issues.forEach(function (i) { ids[i.id] = (ids[i.id] || 0) + 1; }); });
+    var out = ['<h1>Content audit</h1><p class="sub">Fixed-rule checks on every post. Priority weighs severity by search opportunity.</p>',
+               '<div class="controls">'];
+    ["all", "high", "medium", "low"].forEach(function (s) {
+      out.push('<button class="tab' + (state.sev === s ? " on" : "") + '" data-act="sev" data-val="' + s + '">' +
+               (s === "all" ? "All" : '<span class="sev ' + s + '"></span>' + s) + "</button>");
+    });
+    out.push('<select data-act="issue"><option value="all">Every issue type</option>');
+    Object.keys(ids).sort().forEach(function (id) {
+      out.push('<option value="' + esc(id) + '"' + (state.issue === id ? " selected" : "") + ">" + esc(id.replace(/_/g, " ")) + " (" + ids[id] + ")</option>");
+    });
+    out.push("</select></div>");
+    var shown = 0;
+    D.audit.forEach(function (a) {
+      var iss = a.issues.filter(function (i) {
+        return (state.sev === "all" || i.severity === state.sev) && (state.issue === "all" || i.id === state.issue);
+      });
+      if (!iss.length) return;
+      shown++;
+      out.push('<div class="card" style="margin-bottom:10px"><div class="post-head"><strong>' + pageLink(a.slug) + "</strong>" +
+               '<span class="muted">priority ' + a.priority + (a.opportunity != null ? ", opportunity " + Math.round(a.opportunity) : "") + "</span></div>" +
+               '<ul class="plain issues">');
+      iss.forEach(function (i) {
+        out.push('<li><span class="sev ' + esc(i.severity) + '"></span><strong>' + esc(i.id.replace(/_/g, " ")) + "</strong>: " + esc(i.message) +
+                 (i.evidence ? ' <span class="ev">(' + esc(i.evidence) + ")</span>" : "") + "</li>");
+      });
+      out.push("</ul></div>");
+    });
+    if (!shown) out.push('<div class="card empty">No issues match these filters.</div>');
+    return out.join("");
+  }
+
+  function trends() {
+    var out = ['<h1>Trends</h1><p class="sub">Weekly totals, Monday to Sunday. Position is the impression-weighted average, and lower is better.</p>',
+               '<div class="grid two">' + chartCard("Impressions per week", D.weeks, "impressions", { bars: true }) +
+               chartCard("Clicks per week", D.weeks, "clicks", { bars: true, color: "#1b7f3b" }) + "</div>",
+               '<div class="grid" style="margin-top:12px">' + chartCard("Average position (higher on the chart is better)", D.weeks, "position", { invert: true, fmt: pos, color: "#6b4fbb", wide: true }) + "</div>"];
+    var full = D.weeks.filter(function (w) { return !w.partial; }).map(function (w) { return w.week; });
+    var recent = full.slice(-4), before = full.slice(-8, -4);
+    var rows = Object.keys(D.pages).map(function (s) {
+      var pg = D.pages[s], sum = function (wks) {
+        return pg.series.filter(function (p) { return wks.indexOf(p.week) !== -1; }).reduce(function (t, p) { return t + p.impressions; }, 0);
+      };
+      var a = sum(recent), b = sum(before);
+      return { slug: s, recent: a, before: b, change: b ? (a - b) / b : (a ? null : 0), series: pg.series };
+    }).filter(function (r) { return r.recent || r.before; });
+    rows = sortRows(rows, "trend", "recent", "desc");
+    out.push("<h2>Pages: last 4 full weeks vs the 4 before</h2>");
+    out.push('<div class="tbl-wrap"><table><thead><tr>' + th("trend", "slug", "Page", "", "recent", "desc") +
+             th("trend", "recent", "Impressions, last 4 wks", "num", "recent", "desc") + th("trend", "before", "4 wks before", "num", "recent", "desc") +
+             th("trend", "change", "Change", "num", "recent", "desc") + "<th>Weekly impressions</th></tr></thead><tbody>");
+    rows.forEach(function (r) {
+      var ch = r.change == null ? '<span class="delta up">new</span>' :
+        '<span class="delta ' + (r.change > 0.005 ? "up" : r.change < -0.005 ? "down" : "flat") + '">' + (r.change > 0 ? "+" : "") + (r.change * 100).toFixed(0) + "%</span>";
+      out.push("<tr><td>" + pageLink(r.slug) + '</td><td class="num">' + num(r.recent) + '</td><td class="num">' + num(r.before) + '</td><td class="num">' + ch +
+               "</td><td>" + spark(r.series, "impressions") + "</td></tr>");
+    });
+    out.push("</tbody></table></div>");
+    return out.join("");
+  }
+
+  function page(slug) {
+    var pg = D.pages[slug];
+    if (!pg) return '<div class="card empty">No data for this page. <a href="#/overview">Back to overview</a></div>';
+    var find = function (d) { var w = win(d); return w && w.pages.filter(function (r) { return r.slug === slug; })[0]; };
+    var r28 = find("28"), r90 = find("90"), m = r90 || r28;
+    var out = ['<p class="note"><a href="#/opportunities">Opportunities</a> / ' + esc(slug) + "</p>",
+               "<h1>" + esc(pg.title) + "</h1>",
+               '<p class="sub"><a href="' + esc(pg.url) + '" target="_blank" rel="noopener noreferrer">' + esc(pg.url) + "</a>" +
+               (pg.category ? " · " + esc(pg.category) : "") + (pg.has_post ? "" : ' · <span class="chip bad">no post in the blog</span>') + "</p>"];
+    out.push('<div class="grid kpis">');
+    [["Score, 28 days", r28 ? scoreBadge(r28.score) : "n/a"], ["Score, 90 days", r90 ? scoreBadge(r90.score) : "n/a"],
+     ["Impressions, 90 days", m ? num(m.metrics.impressions) : "n/a"], ["Clicks, 90 days", m ? num(m.metrics.clicks) : "n/a"],
+     ["CTR", m ? pct(m.metrics.ctr) : "n/a"], ["Average position", m ? pos(m.metrics.position) : "n/a"]].forEach(function (t) {
+      out.push('<div class="card kpi"><div class="label">' + t[0] + '</div><div class="value">' + t[1] + "</div></div>");
+    });
+    out.push("</div>");
+    if (m) {
+      out.push("<h2>Why it scores this way</h2><div class=\"card\">" + flags(m.flags) + '<ul class="issues">' +
+               m.reasons.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>");
+    }
+    out.push('<h2>Weekly</h2><div class="grid two">' + chartCard("Impressions", pg.series, "impressions", { bars: true }) +
+             chartCard("Average position (higher is better)", pg.series, "position", { invert: true, fmt: pos, color: "#6b4fbb" }) + "</div>");
+    if (pg.audit && pg.audit.issues.length) {
+      out.push('<h2>Audit issues</h2><div class="card"><ul class="plain issues">');
+      pg.audit.issues.forEach(function (i) {
+        out.push('<li><span class="sev ' + esc(i.severity) + '"></span><strong>' + esc(i.id.replace(/_/g, " ")) + "</strong>: " + esc(i.message) +
+                 (i.evidence ? ' <span class="ev">(' + esc(i.evidence) + ")</span>" : "") + "</li>");
+      });
+      out.push("</ul></div>");
+    }
+    var qs = sortRows(pg.queries, "q-" + slug, "impressions", "desc");
+    out.push("<h2>Searches that showed this page</h2>");
+    if (!qs.length) out.push('<div class="card empty">No query data for this page yet.</div>');
+    else {
+      var id = "q-" + slug;
+      out.push('<div class="tbl-wrap"><table><thead><tr>' + th(id, "query", "Query", "", "impressions", "desc") +
+               th(id, "impressions", "Impressions", "num", "impressions", "desc") + th(id, "clicks", "Clicks", "num", "impressions", "desc") +
+               th(id, "position", "Position", "num", "impressions", "desc") + "</tr></thead><tbody>");
+      qs.forEach(function (q) {
+        out.push("<tr><td>" + esc(q.query) + '</td><td class="num">' + num(q.impressions) + '</td><td class="num">' + num(q.clicks) +
+                 '</td><td class="num">' + pos(q.position) + "</td></tr>");
+      });
+      out.push("</tbody></table></div><p class=\"note\">Top 50, over the 90-day window. Google hides rare searches, so these don't add up to the page total.</p>");
+    }
+    if (pg.history.length) {
+      out.push('<h2>Score history</h2><div class="tbl-wrap"><table><thead><tr><th>Window ending</th><th class="num">Days</th><th class="num">Score</th></tr></thead><tbody>');
+      pg.history.slice().reverse().forEach(function (h) {
+        out.push("<tr><td>" + day(h.end) + '</td><td class="num">' + h.days + '</td><td class="num">' + scoreBadge(h.score) + "</td></tr>");
+      });
+      out.push("</tbody></table></div>");
+    }
+    return out.join("");
+  }
+
+  // ---------- routing and events ----------
+  function route() {
+    var h = location.hash.replace(/^#\/?/, "") || "overview";
+    var parts = h.split("/");
+    var view = parts[0], html;
+    if (view === "page") html = page(decodeURIComponent(parts.slice(1).join("/")));
+    else if (view === "opportunities") html = opportunities();
+    else if (view === "audit") html = audit();
+    else if (view === "trends") html = trends();
+    else { view = "overview"; html = overview(); }
+    main.innerHTML = html;
+    document.querySelectorAll("[data-nav]").forEach(function (a) {
+      a.classList.toggle("on", a.getAttribute("data-nav") === view || (view === "page" && a.getAttribute("data-nav") === "opportunities"));
+    });
+  }
+  function rerender(focusSearch) {
+    var y = window.scrollY;
+    route();
+    window.scrollTo(0, y);
+    if (focusSearch) {
+      var s = main.querySelector('input[data-act="q"]');
+      if (s) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+    }
+  }
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-act],[data-sort]");
+    if (!t) return;
+    if (t.hasAttribute("data-sort")) {
+      var id = t.getAttribute("data-table"), key = t.getAttribute("data-sort");
+      var cur = state.sort[id];
+      state.sort[id] = { key: key, dir: cur && cur.key === key && cur.dir === "desc" ? "asc" : "desc" };
+      return rerender();
+    }
+    var act = t.getAttribute("data-act");
+    if (act === "win" || act === "sev") { state[act] = t.getAttribute("data-val"); rerender(); }
+  });
+  document.addEventListener("input", function (e) {
+    if (e.target.getAttribute("data-act") === "q") { state.q = e.target.value; rerender(true); }
+  });
+  document.addEventListener("change", function (e) {
+    if (e.target.getAttribute("data-act") === "issue") { state.issue = e.target.value; rerender(); }
+  });
+  window.addEventListener("hashchange", function () { route(); window.scrollTo(0, 0); });
+
+  document.getElementById("fresh").textContent =
+    "data to " + day(D.data_to) + " · built " + day(D.generated);
+  route();
+})();
+</script>
+</body>
+</html>
