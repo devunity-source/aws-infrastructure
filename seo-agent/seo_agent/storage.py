@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS gsc_rows (
   ctr REAL NOT NULL, position REAL NOT NULL,
   PRIMARY KEY (date, page, query, device, country)
 );
--- Complete page totals from the API (no query dimension, so anonymised traffic is included).
+-- Complete page totals from the API, grouped by date and page only, so anonymised traffic
+-- is included. device and country are stored as '' (kept in the key for older databases).
 CREATE TABLE IF NOT EXISTS gsc_page_rows (
   date TEXT NOT NULL, page TEXT NOT NULL,
   device TEXT NOT NULL, country TEXT NOT NULL,
@@ -127,7 +128,7 @@ def save_api_day(con, site: str, day: str, rows: list[dict], page_rows: list[dic
               r["clicks"], r["impressions"], r["ctr"], r["position"]) for r in rows])
         con.executemany(
             "INSERT INTO gsc_page_rows VALUES (?,?,?,?,?,?,?,?)",
-            [(day, r["page"], r["device"], r["country"],
+            [(day, r["page"], r.get("device", ""), r.get("country", ""),
               r["clicks"], r["impressions"], r["ctr"], r["position"]) for r in page_rows])
         con.execute("INSERT OR REPLACE INTO api_fetches VALUES (?,?,?,?,?)",
                     (site, day, len(rows), len(page_rows), _now()))
@@ -159,9 +160,10 @@ def _window_aggregates(con, start: str, end: str) -> dict[str, list[tuple]]:
     q = lambda table, key: [tuple(r) for r in con.execute(
         f"SELECT {key} AS key, {_AGG} FROM {table} WHERE date BETWEEN ? AND ? "
         f"GROUP BY {key} HAVING SUM(impressions) > 0 ORDER BY key", (start, end))]
+    # No device or country totals: complete ones would need the page fetch split by
+    # them, which makes Google drop rows (see gsc_api.PAGE_DIMS).
     return {"page": q("gsc_page_rows", "page"), "query": q("gsc_rows", "query"),
-            "date": q("gsc_page_rows", "date"), "device": q("gsc_page_rows", "device"),
-            "country": q("gsc_page_rows", "country")}
+            "date": q("gsc_page_rows", "date")}
 
 
 def build_window_import(con, site: str, start: str, end: str) -> tuple[int, bool, dict]:

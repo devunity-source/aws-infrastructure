@@ -93,6 +93,11 @@ def test_auth_failure_becomes_a_clear_error():
         Client(s, sleep=lambda _: pytest.fail("should not retry")).sites()
 
 
+def test_page_totals_are_not_split_by_device_or_country():
+    # Splitting by device or country made Google drop 45% of impressions in real data.
+    assert PAGE_DIMS == ["date", "page"]
+
+
 def test_to_records_names_the_dimensions():
     recs = to_records([row(["2026-11-01", A, "q", "MOBILE", "usa"], clicks=1, impressions=4)], ROW_DIMS)
     assert recs == [{"date": "2026-11-01", "page": A, "query": "q", "device": "MOBILE", "country": "usa",
@@ -122,9 +127,9 @@ def test_window_aggregates_weighted_position_and_complete_page_totals(tmp_path):
     con = connect(tmp_path / "db.sqlite")
     # Page totals include anonymised traffic the query rows don't show.
     _store_day(con, "2026-11-01", [row(["2026-11-01", A, "q1", "MOBILE", "usa"], 1, 10, 4.0)],
-               [row(["2026-11-01", A, "MOBILE", "usa"], 2, 30, 4.0)])
+               [row(["2026-11-01", A], 2, 30, 4.0)])
     _store_day(con, "2026-11-02", [row(["2026-11-02", A, "q1", "DESKTOP", "usa"], 0, 10, 8.0)],
-               [row(["2026-11-02", A, "DESKTOP", "usa"], 0, 10, 8.0)])
+               [row(["2026-11-02", A], 0, 10, 8.0)])
     iid, created, t = build_window_import(con, "sc-domain:example.com", "2026-11-01", "2026-11-02")
     assert created and t == {"clicks": 2, "impressions": 40, "pages": 1, "queries": 1}
     page = aggregate(con, iid, "page")[0]
@@ -133,6 +138,7 @@ def test_window_aggregates_weighted_position_and_complete_page_totals(tmp_path):
     q = aggregate(con, iid, "query")[0]
     assert q["impressions"] == 20 and q["position"] == pytest.approx(6.0)
     assert {r["key"] for r in aggregate(con, iid, "date")} == {"2026-11-01", "2026-11-02"}
+    assert aggregate(con, iid, "device") == []  # page totals are not split by device
     again = build_window_import(con, "sc-domain:example.com", "2026-11-01", "2026-11-02")
     assert again[:2] == (iid, False)
 
@@ -141,7 +147,7 @@ def test_saving_a_day_twice_replaces_it(tmp_path):
     con = connect(tmp_path / "db.sqlite")
     for _ in range(2):
         _store_day(con, "2026-11-01", [row(["2026-11-01", A, "q", "MOBILE", "usa"])],
-                   [row(["2026-11-01", A, "MOBILE", "usa"])])
+                   [row(["2026-11-01", A])])
     assert con.execute("SELECT COUNT(*) FROM gsc_rows").fetchone()[0] == 1
     assert fetch_log(con, "sc-domain:example.com") == {"2026-11-01": 1}
 
