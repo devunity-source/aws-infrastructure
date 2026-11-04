@@ -46,3 +46,8 @@ terraform apply
 
 `protocloud-reviews/` holds the Protocloud Reviews tech blog (Astro static site, Google AdSense, Amazon affiliate).
 See [protocloud-reviews/README.md](protocloud-reviews/README.md) for setup, writing posts and deployment.
+
+## SEO agent
+
+`seo-agent/` scores blog articles by search opportunity from Google Search Console data.
+See [seo-agent/README.md](seo-agent/README.md). Real Search Console data stays out of git.
