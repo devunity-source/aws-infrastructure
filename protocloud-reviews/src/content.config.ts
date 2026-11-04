@@ -10,7 +10,7 @@ const posts = defineCollection({
     description: z.string().max(170),
     pubDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
-    category: z.enum(['laptops', 'desktops', 'keyboards', 'mice', 'monitors', 'audio', 'gadgets']),
+    category: z.enum(['laptops', 'desktops', 'keyboards', 'mice', 'monitors', 'audio', 'gadgets', 'explainers']),
     tags: z.array(z.string()).default([]),
     heroImage: z.string().optional(),
     heroAlt: z.string().optional(),

@@ -58,7 +58,7 @@ Paragraphs about the second product.
 | `seoTitle` | no | Exact `<title>` and social title, used as-is with no site-name suffix. Use it when the H1 is too long for search results (aim for 60 characters or fewer) |
 | `description` | yes | Max 170 characters. Meta description and card blurb |
 | `pubDate` | yes | `YYYY-MM-DD`. Posts sort newest first |
-| `category` | yes | One of `laptops`, `desktops`, `keyboards`, `mice`, `monitors`, `audio`, `gadgets`. Anything else fails the build |
+| `category` | yes | One of `laptops`, `desktops`, `keyboards`, `mice`, `monitors`, `audio`, `gadgets`, `explainers`. Anything else fails the build |
 | `tags` | no | Lowercase, hyphenated. Each tag gets its own page at `/blog/tags/<tag>` |
 | `products` | no | Drives the "Our picks at a glance" table and the product cards |
 | `heroImage` | no | Path under `public/` without the `/blog` prefix, e.g. `/images/webcams.png`. Put a `.webp` with the same name next to it; the page serves it first. 1200 by 630 works for both the hero and social sharing |
