@@ -7,6 +7,7 @@
 #   GSC_SITE              Search Console property   (default https://protocloudsolutions.com/)
 #   GSC_SERVICE_ACCOUNT_JSON  key file              (default ~/.config/seo-agent/gsc-key.json)
 #   SEO_AGENT_KEEP_WEEKS  report folders to keep    (default 26)
+#   SEO_DASHBOARD_DIR     where the dashboard goes  (default /var/www/html/seo-dashboard)
 #   SEO_AGENT_SKIP_PULL=1 don't update the checkout (for testing)
 set -euo pipefail
 
@@ -45,6 +46,15 @@ agent score --days 28 --top 30 --md "$out/opportunities-28d.md" --json "$out/sco
 agent window --days 90
 agent score --days 90 --top 40 --md "$out/opportunities-90d.md" --json "$out/scores-90d.json"
 agent audit --days 90 --md "$out/audit.md" --json "$out/audit.json"
+
+# The dashboard is served by nginx, so it goes outside the private data folder.
+# A dashboard problem never fails the run: the reports above are already written.
+dash="${SEO_DASHBOARD_DIR:-/var/www/html/seo-dashboard}"
+if [ -d "$dash" ] && [ -w "$dash" ]; then
+  agent dashboard --out "$dash" || echo "warning: dashboard build failed"
+else
+  echo "note: $dash is missing or not writable, so the dashboard was skipped"
+fi
 
 ln -sfn "$out" "$DATA/reports/latest"
 find "$DATA/reports" -mindepth 1 -maxdepth 1 -type d -name '20*' -mtime +"$((KEEP_WEEKS * 7))" -exec rm -rf {} +

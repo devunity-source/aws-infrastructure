@@ -1,6 +1,6 @@
 [project]
 name = "seo-agent"
-version = "0.3.0"
+version = "0.4.0"
 requires-python = ">=3.11"
 dependencies = ["PyYAML>=6,<7"]  # post frontmatter
 
@@ -11,3 +11,9 @@ api = ["google-auth>=2.40,<3", "requests>=2.32,<3"]
 
 [project.scripts]
 seo-agent = "seo_agent.cli:main"
+
+[tool.setuptools]
+packages = ["seo_agent"]
+
+[tool.setuptools.package-data]
+seo_agent = ["templates/*.html"]
