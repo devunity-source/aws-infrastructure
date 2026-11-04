@@ -1,0 +1,24 @@
+name: SEO agent tests
+
+on:
+  pull_request:
+    paths: ['seo-agent/**', '.github/workflows/seo-agent.yml']
+  push:
+    branches: [main]
+    paths: ['seo-agent/**', '.github/workflows/seo-agent.yml']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: seo-agent
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install -e '.[dev]'
+      - run: python -m pytest -q

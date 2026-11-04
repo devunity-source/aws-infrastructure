@@ -1,0 +1,11 @@
+data/
+out/
+*.sqlite
+__pycache__/
+.pytest_cache/
+.env
+
+# Real Search Console data never goes in git.
+gsc-exports/
+reports/
+*.zip
