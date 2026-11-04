@@ -2,7 +2,7 @@
 
 The SEO optimisation agent for Protocloud Reviews. This is Phase 2, slice 1: it imports the Search Console data and scores which articles to work on first.
 
-It doesn't need any credentials. It runs on Python 3.11+ and uses only the standard library. You'll need pytest to run the tests.
+It doesn't need any credentials. It runs on Python 3.11+ and needs only PyYAML, for post frontmatter. You'll need pytest to run the tests.
 
 ## Run it
 
@@ -69,6 +69,36 @@ python -m seo_agent score --md out/opportunities.md
   says so. Reports from CSV imports still say "inferred".
 - The `declining` flag only compares windows of the same length and source.
 
+## Content audit
+
+```bash
+python -m seo_agent audit --md out/audit.md --json out/audit.json
+```
+
+`audit` reads every post in the blog and checks it against fixed rules. Each issue has a severity
+and the evidence behind it:
+
+- **Search snippet:** title over 60 characters as rendered, description over 160 or under 70,
+  a past year in the title.
+- **Freshness:** no update in six months.
+- **Images:** no hero image, or a hero image without alt text.
+- **Links:** links to missing or retired pages, links through a redirect, orphan posts that nothing
+  links to, fewer than two internal links.
+- **Depth:** under 600 words, fewer than three sections, products with no ASIN or retailer URL.
+
+If the database has an import, each post's opportunity score is joined in, which adds search
+checks: impressions with no clicks, ranking beyond page 2, and stale-year searches. Pages changed
+in the last 28 days get a "wait for data" note instead of "rewrite the title". Posts are ranked by
+priority, which is issue severity weighted by opportunity. With no database, the audit checks
+content only.
+
+## Retired and redirected URLs
+
+`score` and `audit` read the exact-match `return 410` and `return 301` rules in
+`protocloud-reviews/deploy/protocloud-blog.conf`. Elsewhere, pass `--nginx` or set `SEO_AGENT_NGINX`.
+Retired and redirected URLs are left out of scoring and listed separately, so they don't show up
+as dead URLs.
+
 ## The dead URL check
 
 `score` compares every scored URL against the blog's posts. Inside this repo it reads `protocloud-reviews/src/content/posts` automatically. Elsewhere, pass `--posts-dir` or set `SEO_AGENT_POSTS_DIR`. Pages without a post get the `dead_url` flag, because they return 404 or 410 unless a redirect covers them.
@@ -89,7 +119,9 @@ seo_agent/gsc_csv.py   export parser (BOM, % CTR, header variants, zip or folder
 seo_agent/storage.py   SQLite schema, idempotent imports, API day storage and windows, score history
 seo_agent/scoring.py   classification, templated-query detection, query->page inference, scoring
 seo_agent/config.py    every tunable number, with comments
-seo_agent/cli.py       import / sites / fetch / window / score
+seo_agent/cli.py       import / sites / fetch / window / score / audit
+seo_agent/content.py   post parser (frontmatter, headings, products, links) and nginx rules
+seo_agent/audit.py     rule-based content audit joined with opportunity scores
 seo_agent/gsc_api.py   Search Console API client: auth, pagination, retries
-tests/                 46 tests on synthetic data, with a fake API session (no real data, no network)
+tests/                 55 tests on synthetic data, with a fake API session (no real data, no network)
 ```

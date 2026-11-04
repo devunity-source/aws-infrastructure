@@ -190,19 +190,24 @@ def position_component(pos: float, cfg: dict) -> float:
 def score_pages(pages: list[dict], queries: list[dict], cfg: dict,
                 previous: dict[str, dict] | None = None,
                 existing_slugs: set[str] | None = None,
-                observed: dict[str, list[dict]] | None = None) -> tuple[list[PageScore], dict]:
+                observed: dict[str, list[dict]] | None = None,
+                handled: dict[str, str] | None = None) -> tuple[list[PageScore], dict]:
     """pages/queries: dicts with key, clicks, impressions, ctr, position.
 
     existing_slugs: slugs that have a post in the blog. When given, scored pages
     without a post get a dead_url flag. None skips the check.
     observed: page URL -> its queries, from the Search Console API join. When given,
     queries are mapped to pages from real data instead of inferred from wording.
+    handled: slug -> how the server already handles it (retired or redirected).
+    Those pages are left out of scoring and listed in the summary instead.
     """
     w = cfg["weights"]
-    articles = {}
+    articles, skipped = {}, {}
     for p in pages:
         s = slug_of(p["key"], cfg)
-        if s:
+        if s and handled and s in handled:
+            skipped[p["key"]] = handled[s]
+        elif s:
             articles[s] = p
 
     nonbrand = [q for q in queries if not is_brand(q["key"], cfg)]
@@ -326,9 +331,10 @@ def score_pages(pages: list[dict], queries: list[dict], cfg: dict,
                                     "(inferred). Confirm with page+query API data before merging."))
 
     results.sort(key=lambda r: -r.score)
-    excluded = [p["key"] for p in pages if not slug_of(p["key"], cfg)]
+    excluded = [p["key"] for p in pages if not slug_of(p["key"], cfg)]  # handled URLs are listed separately
     summary = {"articles_scored": len(results), "excluded_non_articles": excluded,
                "query_mapping": basis,
+               "handled_urls": skipped,
                "dead_urls": [r.page for r in results if "dead_url" in r.flags],
                "brand_queries": [q["key"] for q in queries if is_brand(q["key"], cfg)],
                "templated_query_count": len(templated),
