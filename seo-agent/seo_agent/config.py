@@ -9,11 +9,14 @@ from copy import deepcopy
 from pathlib import Path
 
 DEFAULTS: dict = {
-    "site": "https://protocloudsolutions.com",
-    "article_prefix": "/blog/",
-    "non_article_slugs": ["about", "contact", "privacy", "disclosure", "terms"],
-    "non_article_prefixes": ["/blog/category/", "/blog/tag/", "/blog/author/"],
-    "brand_terms": ["protocloud", "proto cloud", "protocloudsolutions"],
+    "site": "https://digitalapricot.io",
+    "article_prefix": "/",
+    # Where articles used to live -> where they live now. Old URLs (Search Console history,
+    # old GA4 page paths) are rewritten to the new ones, so a moved article keeps one history.
+    "legacy_urls": {"https://protocloudsolutions.com/blog/": "https://digitalapricot.io/"},
+    "non_article_slugs": ["about", "contact", "privacy", "disclosure", "terms", "search", "404"],
+    "non_article_prefixes": ["/category/", "/tags/", "/tag/", "/author/"],
+    "brand_terms": ["digital apricot", "digitalapricot", "protocloud", "proto cloud", "protocloudsolutions"],
 
     # Weights must sum to 1. Each component is 0..1, so score = 100 * weighted sum.
     "weights": {

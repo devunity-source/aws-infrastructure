@@ -1,0 +1,9 @@
+---
+import ApricotMark from './ApricotMark.astro';
+import { SITE, url } from '../lib/site';
+const { class: cls = '' } = Astro.props;
+---
+<a href={url('/')} class={`inline-flex items-center gap-2.5 ${cls}`} aria-label={`${SITE.name} home`}>
+  <ApricotMark size={40} />
+  <span class="text-[1.35rem] font-bold leading-none tracking-tight text-fg">Digital<span class="text-primary">Apricot</span></span>
+</a>

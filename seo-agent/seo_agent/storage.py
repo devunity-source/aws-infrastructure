@@ -78,12 +78,39 @@ DIMS = {"pages": "page", "queries": "query", "chart": "date",
         "devices": "device", "countries": "country"}
 
 
-def connect(path: str | Path) -> sqlite3.Connection:
+def connect(path: str | Path, legacy_urls: dict | None = None) -> sqlite3.Connection:
+    """Open the database. canon(page) is available in SQL: it rewrites a moved article's old
+    URL to its new one (config legacy_urls), so old and new URLs group as one page."""
+    from .config import DEFAULTS
+    legacy = list((DEFAULTS["legacy_urls"] if legacy_urls is None else legacy_urls).items())
+
+    def canon(page):
+        if page is None:
+            return None
+        for old, new in legacy:
+            if page.startswith(old):
+                page = new + page[len(old):]
+                return page[:-5] if page.endswith(".html") else page
+        return page
+
     con = sqlite3.connect(str(path))
     con.row_factory = sqlite3.Row
+    con.create_function("canon", 1, canon, deterministic=True)
     con.execute("PRAGMA foreign_keys = ON")
     con.executescript(SCHEMA)
     return con
+
+
+def site_page_filter(site: str) -> tuple[str, list[str]]:
+    """SQL condition and params matching the page URLs a Search Console property covers:
+    a URL-prefix property ('https://x.com/') or a domain property ('sc-domain:x.com')."""
+    if site.startswith("sc-domain:"):
+        d = site[len("sc-domain:"):]
+        pats = [f"http://{d}/%", f"https://{d}/%", f"http://%.{d}/%", f"https://%.{d}/%"]
+    else:
+        pats = [site if site.endswith("/") else site + "/"]
+        pats = [pats[0] + "%"]
+    return "(" + " OR ".join(["page LIKE ?"] * len(pats)) + ")", pats
 
 
 def _now() -> str:
@@ -138,10 +165,12 @@ def save_scores(con, import_id: int, scores: list) -> None:
 # ---------- API data ----------
 
 def save_api_day(con, site: str, day: str, rows: list[dict], page_rows: list[dict]) -> None:
-    """Replace one day's API data. Rerunning a day is safe."""
+    """Replace one day's API data for this property. Rerunning a day is safe, and other
+    properties' rows for the same day are left alone."""
+    cond, pats = site_page_filter(site)
     with con:
-        con.execute("DELETE FROM gsc_rows WHERE date=?", (day,))
-        con.execute("DELETE FROM gsc_page_rows WHERE date=?", (day,))
+        con.execute(f"DELETE FROM gsc_rows WHERE date=? AND {cond}", (day, *pats))
+        con.execute(f"DELETE FROM gsc_page_rows WHERE date=? AND {cond}", (day, *pats))
         con.executemany(
             "INSERT INTO gsc_rows VALUES (?,?,?,?,?,?,?,?,?)",
             [(day, r["page"], r["query"], r["device"], r["country"],
@@ -196,7 +225,7 @@ def _window_aggregates(con, start: str, end: str) -> dict[str, list[tuple]]:
         f"GROUP BY {key} HAVING SUM(impressions) > 0 ORDER BY key", (start, end))]
     # No device or country totals: complete ones would need the page fetch split by
     # them, which makes Google drop rows (see gsc_api.PAGE_DIMS).
-    return {"page": q("gsc_page_rows", "page"), "query": q("gsc_rows", "query"),
+    return {"page": q("gsc_page_rows", "canon(page)"), "query": q("gsc_rows", "query"),
             "date": q("gsc_page_rows", "date")}
 
 
@@ -228,8 +257,8 @@ def observed_query_pages(con, start: str, end: str) -> dict[str, list[dict]]:
     """page -> its queries, observed from the API join (not inferred from wording)."""
     out: dict[str, list[dict]] = {}
     for r in con.execute(
-            f"SELECT page, query AS key, {_AGG} FROM gsc_rows WHERE date BETWEEN ? AND ? "
-            "GROUP BY page, query HAVING SUM(impressions) > 0", (start, end)):
+            f"SELECT canon(page) AS page, query AS key, {_AGG} FROM gsc_rows WHERE date BETWEEN ? AND ? "
+            "GROUP BY canon(page), query HAVING SUM(impressions) > 0", (start, end)):
         out.setdefault(r["page"], []).append(
             dict(key=r["key"], clicks=r["clicks"], impressions=r["impressions"],
                  ctr=r["ctr"], position=r["position"]))

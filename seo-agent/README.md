@@ -52,7 +52,7 @@ Then:
 
 ```bash
 python -m seo_agent sites --key key.json                       # which properties the key can read
-python -m seo_agent fetch --key key.json --site sc-domain:protocloudsolutions.com --days 90
+python -m seo_agent fetch --key key.json --site sc-domain:digitalapricot.io --days 90
 python -m seo_agent window --days 90                           # aggregate stored days into an import
 python -m seo_agent score --md out/opportunities.md
 ```
@@ -68,6 +68,16 @@ python -m seo_agent score --md out/opportunities.md
 - When the latest import came from the API, `score` maps queries to pages from the observed data and
   says so. Reports from CSV imports still say "inferred".
 - The `declining` flag only compares windows of the same length and source.
+
+## The move to digitalapricot.io
+
+The blog moved from `protocloudsolutions.com/blog/` to the root of `digitalapricot.io` in November 2026.
+`legacy_urls` in the config maps every old article URL to its new one. Scoring, the audit and the
+dashboard group both URLs as one page, so an article's history carries across the move. Pages of the
+consulting site are never counted as articles, because the host has to match. The weekly run fetches
+both Search Console properties, `https://protocloudsolutions.com/` for the history and
+`sc-domain:digitalapricot.io` from now on. If one property fails, for example before the service account
+has access to it, the run logs a warning and carries on with the other.
 
 ## Weekly run on the server
 
@@ -183,13 +193,13 @@ content only.
 ## Retired and redirected URLs
 
 `score` and `audit` read the exact-match `return 410` and `return 301` rules in
-`protocloud-reviews/deploy/protocloud-blog.conf`. Elsewhere, pass `--nginx` or set `SEO_AGENT_NGINX`.
+`digitalapricot/deploy/protocloud-blog.conf`. Elsewhere, pass `--nginx` or set `SEO_AGENT_NGINX`.
 Retired and redirected URLs are left out of scoring and listed separately, so they don't show up
 as dead URLs.
 
 ## The dead URL check
 
-`score` compares every scored URL against the blog's posts. Inside this repo it reads `protocloud-reviews/src/content/posts` automatically. Elsewhere, pass `--posts-dir` or set `SEO_AGENT_POSTS_DIR`. Pages without a post get the `dead_url` flag, because they return 404 or 410 unless a redirect covers them.
+`score` compares every scored URL against the blog's posts. Inside this repo it reads `digitalapricot/src/content/posts` automatically. Elsewhere, pass `--posts-dir` or set `SEO_AGENT_POSTS_DIR`. Pages without a post get the `dead_url` flag, because they return 404 or 410 unless a redirect covers them.
 
 ## Known limits of CSV exports
 

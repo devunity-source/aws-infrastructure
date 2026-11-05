@@ -11,8 +11,10 @@ import yaml
 
 FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.S)
 HEADING = re.compile(r"^(#{2,3})\s+(.+?)\s*#*\s*$", re.M)
-INTERNAL_LINK = re.compile(r"\]\((?:https?://protocloudsolutions\.com)?/blog/([a-z0-9-]+)/?(?:#[^)]*)?\)")
-EXTERNAL_LINK = re.compile(r"\]\(https?://(?!protocloudsolutions\.com)[^)]+\)")
+# Links to another page on the site: /slug, https://digitalapricot.io/slug, or an old /blog/slug.
+INTERNAL_LINK = re.compile(r"\]\((?:https?://(?:www\.)?digitalapricot\.io|https?://protocloudsolutions\.com/blog|/blog)?"
+                           r"/([a-z0-9-]+)/?(?:#[^)]*)?\)")
+EXTERNAL_LINK = re.compile(r"\]\(https?://(?!(?:www\.)?digitalapricot\.io|protocloudsolutions\.com)[^)]+\)")
 COMPONENT_OR_IMPORT = re.compile(r"^\s*(import\s.+|<[A-Za-z][^>]*/?>|</[A-Za-z]+>)\s*$", re.M)
 # Pages under /blog/ that are not posts but are valid link targets.
 SITE_PAGES = {"about", "contact", "privacy", "disclosure", "search", "category", "tags"}

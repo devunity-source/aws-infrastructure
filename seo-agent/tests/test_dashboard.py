@@ -7,7 +7,7 @@ import stat
 
 from seo_agent import cli
 
-A = "https://example.com/blog/best-x-monitors"
+A = "https://digitalapricot.io/best-x-monitors"
 EVIL = "</script><script>alert(1)</script>"
 
 
@@ -23,7 +23,7 @@ def _fake_api(evil=False):
 def _build(tmp_path, monkeypatch, evil=False):
     monkeypatch.setattr(cli, "make_client", lambda key: _fake_api(evil))
     db = str(tmp_path / "x.sqlite")
-    assert cli.main(["--db", db, "fetch", "--site", "sc-domain:example.com",
+    assert cli.main(["--db", db, "fetch", "--site", "sc-domain:digitalapricot.io",
                      "--start", "2026-09-01", "--end", "2026-11-01"]) == 0
     assert cli.main(["--db", db, "window", "--days", "28"]) == 0
     posts = tmp_path / "posts"; posts.mkdir()

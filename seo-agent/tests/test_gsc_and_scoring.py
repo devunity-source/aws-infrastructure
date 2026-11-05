@@ -13,7 +13,7 @@ from seo_agent.scoring import (assign_queries, expected_ctr, score_pages, slug_o
 from seo_agent.storage import connect, save_export
 
 FIX = Path(__file__).parent / "fixtures" / "gsc_export"
-CFG = {**cfgmod.load(), "site": "https://example.com"}
+CFG = {**cfgmod.load(), "site": "https://digitalapricot.io"}
 
 
 def rows(exp_rows):
@@ -74,13 +74,22 @@ def test_import_is_idempotent(tmp_path):
 # ---------- classification ----------
 
 @pytest.mark.parametrize("url,slug", [
-    ("https://example.com/blog/best-ai-smart-glasses", "best-ai-smart-glasses"),
-    ("https://example.com/blog/best-ai-smart-glasses/", "best-ai-smart-glasses"),
-    ("https://example.com/blog/category/mice", None),
-    ("https://example.com/blog/disclosure", None),
-    ("https://example.com/#about", None),
-    ("https://example.com/", None),
-    ("https://example.com/store/product/x", None),
+    ("https://digitalapricot.io/best-ai-smart-glasses", "best-ai-smart-glasses"),
+    ("https://digitalapricot.io/best-ai-smart-glasses/", "best-ai-smart-glasses"),
+    ("https://digitalapricot.io/category/mice", None),
+    ("https://digitalapricot.io/disclosure", None),
+    ("https://digitalapricot.io/#about", None),
+    ("https://digitalapricot.io/", None),
+    ("https://digitalapricot.io/store/product/x", None),
+    ("https://www.digitalapricot.io/best-x-monitors", "best-x-monitors"),
+    ("https://digitalapricot.io/favicon.svg", None),
+    # Before the move: the old address maps to the same article.
+    ("https://protocloudsolutions.com/blog/best-ai-smart-glasses", "best-ai-smart-glasses"),
+    ("https://protocloudsolutions.com/blog/best-ai-smart-glasses.html", "best-ai-smart-glasses"),
+    # The consulting site in the same property is never an article.
+    ("https://protocloudsolutions.com/services", None),
+    ("https://protocloudsolutions.com/blog/category/mice", None),
+    ("https://elsewhere.com/best-x-monitors", None),
 ])
 def test_slug_of(url, slug):
     assert slug_of(url, CFG) == slug
@@ -142,21 +151,21 @@ def test_templated_queries_flagged_and_lower_relevance():
 
 
 def test_ctr_gap_damped_for_small_samples():
-    page = dict(key="https://example.com/blog/best-x-monitors", clicks=0, ctr=0.0, position=8)
+    page = dict(key="https://digitalapricot.io/best-x-monitors", clicks=0, ctr=0.0, position=8)
     small, _ = score_pages([{**page, "impressions": 20}], [], CFG)
     big, _ = score_pages([{**page, "impressions": 2000}], [], CFG)
     assert small[0].components["ctr_gap"] < big[0].components["ctr_gap"] == 1.0
 
 
 def test_position_beyond_20_is_marked():
-    page = dict(key="https://example.com/blog/best-x-monitors", clicks=0, ctr=0.0,
+    page = dict(key="https://digitalapricot.io/best-x-monitors", clicks=0, ctr=0.0,
                 impressions=500, position=35)
     r, _ = score_pages([page], [], CFG)
     assert r[0].components["position_band"] < 1 and any("beyond page 2" in x for x in r[0].reasons)
 
 
 def test_declining_flag_against_previous_import():
-    url = "https://example.com/blog/best-x-monitors"
+    url = "https://digitalapricot.io/best-x-monitors"
     cur = [dict(key=url, clicks=0, ctr=0.0, impressions=100, position=9)]
     prev = {url: dict(key=url, clicks=2, ctr=0.01, impressions=400, position=8)}
     r, _ = score_pages(cur, [], CFG, prev)
@@ -164,9 +173,9 @@ def test_declining_flag_against_previous_import():
 
 
 def test_dead_url_flagged_only_for_missing_posts():
-    live = dict(key="https://example.com/blog/best-x-monitors", clicks=0, ctr=0.0,
+    live = dict(key="https://digitalapricot.io/best-x-monitors", clicks=0, ctr=0.0,
                 impressions=500, position=9)
-    gone = {**live, "key": "https://example.com/blog/old-removed-post"}
+    gone = {**live, "key": "https://digitalapricot.io/old-removed-post"}
     res, summary = score_pages([live, gone], [], CFG, existing_slugs={"best-x-monitors"})
     by_page = {r.page: r for r in res}
     assert "dead_url" not in by_page[live["key"]].flags
@@ -176,7 +185,7 @@ def test_dead_url_flagged_only_for_missing_posts():
 
 
 def test_dead_url_check_skipped_without_slugs():
-    page = dict(key="https://example.com/blog/anything", clicks=0, ctr=0.0,
+    page = dict(key="https://digitalapricot.io/anything", clicks=0, ctr=0.0,
                 impressions=500, position=9)
     res, summary = score_pages([page], [], CFG)
     assert "dead_url" not in res[0].flags and summary["dead_urls"] == []

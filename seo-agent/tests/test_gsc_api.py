@@ -10,9 +10,9 @@ from seo_agent.scoring import score_pages
 from seo_agent.storage import (aggregate, build_window_import, connect, fetch_log,
                                observed_query_pages, save_api_day)
 
-CFG = {**cfgmod.load(), "site": "https://example.com"}
-A = "https://example.com/blog/best-x-monitors"
-B = "https://example.com/blog/best-y-monitors"
+CFG = {**cfgmod.load(), "site": "https://digitalapricot.io"}
+A = "https://digitalapricot.io/best-x-monitors"
+B = "https://digitalapricot.io/best-y-monitors"
 
 
 class Resp:
@@ -52,7 +52,7 @@ def row(keys, clicks=0, impressions=10, position=5.0):
 
 def test_query_paginates_until_a_short_page():
     s = Session(Resp(body={"rows": [row(["a"]), row(["b"])]}), Resp(body={"rows": [row(["c"])]}))
-    rows = list(Client(s, row_limit=2).query("sc-domain:example.com", "2026-11-01", "2026-11-01", ["query"]))
+    rows = list(Client(s, row_limit=2).query("sc-domain:digitalapricot.io", "2026-11-01", "2026-11-01", ["query"]))
     assert [r["keys"][0] for r in rows] == ["a", "b", "c"]
     assert [c[2]["startRow"] for c in s.calls] == [0, 2]
     body = s.calls[0][2]
@@ -61,8 +61,8 @@ def test_query_paginates_until_a_short_page():
 
 def test_site_url_is_encoded_in_the_path():
     s = Session(Resp(body={}))
-    list(Client(s).query("https://example.com/", "2026-11-01", "2026-11-01", ["page"]))
-    assert "/sites/https%3A%2F%2Fexample.com%2F/searchAnalytics/query" in s.calls[0][1]
+    list(Client(s).query("https://digitalapricot.io/", "2026-11-01", "2026-11-01", ["page"]))
+    assert "/sites/https%3A%2F%2Fdigitalapricot.io%2F/searchAnalytics/query" in s.calls[0][1]
 
 
 def test_retries_on_rate_limit_and_server_errors():
@@ -119,7 +119,7 @@ def test_load_key_accepts_path_or_json_and_rejects_other_keys(tmp_path, monkeypa
 
 # ---------- storage ----------
 
-def _store_day(con, day, rows, pages, site="sc-domain:example.com"):
+def _store_day(con, day, rows, pages, site="sc-domain:digitalapricot.io"):
     save_api_day(con, site, day, to_records(rows, ROW_DIMS), to_records(pages, PAGE_DIMS))
 
 
@@ -130,7 +130,7 @@ def test_window_aggregates_weighted_position_and_complete_page_totals(tmp_path):
                [row(["2026-11-01", A], 2, 30, 4.0)])
     _store_day(con, "2026-11-02", [row(["2026-11-02", A, "q1", "DESKTOP", "usa"], 0, 10, 8.0)],
                [row(["2026-11-02", A], 0, 10, 8.0)])
-    iid, created, t = build_window_import(con, "sc-domain:example.com", "2026-11-01", "2026-11-02")
+    iid, created, t = build_window_import(con, "sc-domain:digitalapricot.io", "2026-11-01", "2026-11-02")
     assert created and t == {"clicks": 2, "impressions": 40, "pages": 1, "queries": 1}
     page = aggregate(con, iid, "page")[0]
     assert page["impressions"] == 40 and page["ctr"] == pytest.approx(0.05)
@@ -139,7 +139,7 @@ def test_window_aggregates_weighted_position_and_complete_page_totals(tmp_path):
     assert q["impressions"] == 20 and q["position"] == pytest.approx(6.0)
     assert {r["key"] for r in aggregate(con, iid, "date")} == {"2026-11-01", "2026-11-02"}
     assert aggregate(con, iid, "device") == []  # page totals are not split by device
-    again = build_window_import(con, "sc-domain:example.com", "2026-11-01", "2026-11-02")
+    again = build_window_import(con, "sc-domain:digitalapricot.io", "2026-11-01", "2026-11-02")
     assert again[:2] == (iid, False)
 
 
@@ -149,7 +149,7 @@ def test_saving_a_day_twice_replaces_it(tmp_path):
         _store_day(con, "2026-11-01", [row(["2026-11-01", A, "q", "MOBILE", "usa"])],
                    [row(["2026-11-01", A])])
     assert con.execute("SELECT COUNT(*) FROM gsc_rows").fetchone()[0] == 1
-    assert fetch_log(con, "sc-domain:example.com") == {"2026-11-01": 1}
+    assert fetch_log(con, "sc-domain:digitalapricot.io") == {"2026-11-01": 1}
 
 
 # ---------- scoring with the observed join ----------
@@ -188,7 +188,7 @@ def test_cli_fetch_is_incremental_then_window_and_score(tmp_path, monkeypatch, c
     calls = []
     monkeypatch.setattr(cli, "make_client", lambda key: _fake_api(calls))
     db = str(tmp_path / "x.sqlite")
-    args = ["--db", db, "fetch", "--site", "sc-domain:example.com", "--start", "2026-10-01", "--end", "2026-10-03"]
+    args = ["--db", db, "fetch", "--site", "sc-domain:digitalapricot.io", "--start", "2026-10-01", "--end", "2026-10-03"]
     assert cli.main(args) == 0
     assert len(calls) == 6  # 3 days x (query rows + page totals)
     assert cli.main(args) == 0 and len(calls) == 6  # nothing new to fetch
@@ -210,9 +210,9 @@ def test_cli_refetches_recent_empty_days(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "pacific_today", lambda: __import__("datetime").date(2026, 11, 4))
     db = str(tmp_path / "x.sqlite")
     con = connect(db)
-    save_api_day(con, "sc-domain:example.com", "2026-10-31", [], [])  # recent and empty: not final yet
-    save_api_day(con, "sc-domain:example.com", "2026-10-01", [], [])  # old and empty: a real zero day
-    assert cli.main(["--db", db, "fetch", "--site", "sc-domain:example.com",
+    save_api_day(con, "sc-domain:digitalapricot.io", "2026-10-31", [], [])  # recent and empty: not final yet
+    save_api_day(con, "sc-domain:digitalapricot.io", "2026-10-01", [], [])  # old and empty: a real zero day
+    assert cli.main(["--db", db, "fetch", "--site", "sc-domain:digitalapricot.io",
                      "--start", "2026-10-01", "--end", "2026-10-31"]) == 0
     fetched = {d for d, _ in calls}
     assert "2026-10-31" in fetched and "2026-10-01" not in fetched
@@ -222,7 +222,7 @@ def test_score_days_picks_the_matching_window(tmp_path, monkeypatch):
     calls = []
     monkeypatch.setattr(cli, "make_client", lambda key: _fake_api(calls))
     db = str(tmp_path / "x.sqlite")
-    assert cli.main(["--db", db, "fetch", "--site", "sc-domain:example.com",
+    assert cli.main(["--db", db, "fetch", "--site", "sc-domain:digitalapricot.io",
                      "--start", "2026-10-01", "--end", "2026-10-28"]) == 0
     # Build 7 then 28, then rebuild 7: same end date, so "latest" alone would be ambiguous.
     for d in (7, 28, 7):
@@ -250,3 +250,23 @@ def test_cli_sites_reports_api_errors(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(cli, "make_client", boom)
     assert cli.main(["sites"]) == 2
     assert "no service account key" in capsys.readouterr().err
+
+
+def test_two_properties_share_a_day_and_old_urls_merge_into_new(tmp_path):
+    """The blog moved from protocloudsolutions.com/blog to digitalapricot.io. Both properties
+    are fetched; saving one doesn't wipe the other, and an article's two URLs score as one."""
+    con = connect(tmp_path / "x.sqlite")
+    old = "https://protocloudsolutions.com/blog/best-x-monitors"
+    new = "https://digitalapricot.io/best-x-monitors"
+    rec = lambda page, imp, pos: {"page": page, "query": "best x monitor", "device": "", "country": "",
+                                  "clicks": 1, "impressions": imp, "ctr": 0.1, "position": pos}
+    save_api_day(con, "https://protocloudsolutions.com/", "2026-11-01", [rec(old, 30, 8.0)],
+                 [rec(old, 30, 8.0), rec("https://protocloudsolutions.com/services", 50, 3.0)])
+    save_api_day(con, "sc-domain:digitalapricot.io", "2026-11-01", [rec(new, 10, 4.0)], [rec(new, 10, 4.0)])
+    save_api_day(con, "sc-domain:digitalapricot.io", "2026-11-01", [rec(new, 10, 4.0)], [rec(new, 10, 4.0)])  # rerun
+    assert con.execute("SELECT COUNT(*) FROM gsc_page_rows").fetchone()[0] == 3  # old day kept, new not doubled
+    iid, _, t = build_window_import(con, "both", "2026-11-01", "2026-11-01")
+    pages = {r["key"]: r for r in aggregate(con, iid, "page")}
+    assert set(pages) == {new, "https://protocloudsolutions.com/services"}
+    assert pages[new]["impressions"] == 40 and pages[new]["position"] == (30 * 8.0 + 10 * 4.0) / 40
+    assert list(observed_query_pages(con, "2026-11-01", "2026-11-01")) == [new]

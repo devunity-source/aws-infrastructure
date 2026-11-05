@@ -84,10 +84,10 @@ def audit_post(p: Post, posts: dict[str, Post], handled: dict[str, str], inbound
             continue
         if target in handled and handled[target].startswith("redirects"):
             add("link_through_redirect", "medium", "Links to a URL that redirects. Point it at the final page.",
-                f"/blog/{target} {handled[target]}")
+                f"/{target} {handled[target]}")
         else:
             add("broken_internal_link", "high", "Links to a page that doesn't exist.",
-                f"/blog/{target}" + (f" is {handled[target]}" if target in handled else ""))
+                f"/{target}" + (f" is {handled[target]}" if target in handled else ""))
     if not inbound.get(p.slug):
         add("orphan", "medium", "No other post links here, so readers and crawlers rarely find it. "
             "Link to it from a related guide.")

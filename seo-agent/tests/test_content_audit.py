@@ -9,7 +9,7 @@ from seo_agent.cli import main
 from seo_agent.content import handled_urls, load_posts, parse_post
 from seo_agent.scoring import score_pages
 
-CFG = {**cfgmod.load(), "site": "https://example.com"}
+CFG = {**cfgmod.load(), "site": "https://digitalapricot.io"}
 TODAY = date(2026, 11, 4)
 
 POST_A = """---
@@ -102,11 +102,11 @@ def test_handled_urls_reads_only_exact_return_rules(tmp_path):
 # ---------- scoring skips handled URLs ----------
 
 def test_handled_urls_are_skipped_not_flagged_dead():
-    page = lambda s: dict(key=f"https://example.com/blog/{s}", clicks=0, ctr=0.0, impressions=300, position=9)
+    page = lambda s: dict(key=f"https://digitalapricot.io/{s}", clicks=0, ctr=0.0, impressions=300, position=9)
     res, summary = score_pages([page("live"), page("retired-post")], [], CFG, existing_slugs={"live"},
                                handled={"retired-post": "retired (410)"})
-    assert [r.page for r in res] == ["https://example.com/blog/live"]
-    assert summary["handled_urls"] == {"https://example.com/blog/retired-post": "retired (410)"}
+    assert [r.page for r in res] == ["https://digitalapricot.io/live"]
+    assert summary["handled_urls"] == {"https://digitalapricot.io/retired-post": "retired (410)"}
     assert summary["dead_urls"] == []
 
 
