@@ -48,6 +48,17 @@ def test_forbidden_explains_ga4_access():
         raise AssertionError("expected an error")
 
 
+def test_disabled_api_says_to_enable_it():
+    msg = "Google Analytics Data API has not been used in project 1 before or it is disabled. Enable it by visiting https://x then retry."
+    s = Session(Resp(403, {"error": {"message": msg}}))
+    try:
+        GA4Client(s, sleep=lambda _: None).clicks("123", "2026-11-01", "2026-11-01")
+    except GSCAPIError as e:
+        assert "Enable the API" in str(e) and "Property access" not in str(e) and "retry.." not in str(e)
+    else:
+        raise AssertionError("expected an error")
+
+
 def test_save_replaces_the_range(tmp_path):
     con = connect(tmp_path / "x.sqlite")
     r = {"date": "2026-11-01", "page_path": "/blog/a", "product": "Cam", "asin": "", "clicks": 2}
