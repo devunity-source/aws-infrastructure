@@ -15,7 +15,7 @@ const short = (t: string) => {
 };
 const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', timeZone: 'UTC' });
 
-const boot = 'PROTOCLOUD BIOS v2.6  640K OK';
+const boot = 'APRICOT BIOS v2.6  640K OK';
 const cmd = 'dir guides /new';
 const lines = posts.map((p, i) => ({
   href: `${base}/${p.id}`,
@@ -47,7 +47,7 @@ const done = 2.9 + lines.length * 0.28 + 0.2;
       <span class="beam" aria-hidden="true"></span>
     </div>
     <div class="chin" aria-hidden="true">
-      <span class="badge">PROTOCLOUD</span>
+      <span class="badge">APRICOT</span>
       <span class="vents"></span>
       <span class="led"></span>
     </div>
