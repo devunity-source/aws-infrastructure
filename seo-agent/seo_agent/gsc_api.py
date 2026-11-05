@@ -49,30 +49,33 @@ def load_key(key: str | None) -> dict:
     return info
 
 
-def session_from_key(info: dict):
+def session_from_key(info: dict, scope: str = SCOPE):
     try:
         from google.oauth2 import service_account
         from google.auth.transport.requests import AuthorizedSession
     except ImportError:
         raise GSCAPIError("google-auth and requests are needed for the API. "
                           "Install with: pip install -e '.[api]'") from None
-    creds = service_account.Credentials.from_service_account_info(info, scopes=[SCOPE])
+    creds = service_account.Credentials.from_service_account_info(info, scopes=[scope])
     return AuthorizedSession(creds)
 
 
-def _error_message(resp) -> str:
+FORBIDDEN_HINT = (" Add the service account's email as a user on the Search Console property, "
+                  "and check the site value with the `sites` command.")
+
+
+def _error_message(resp, forbidden_hint: str = FORBIDDEN_HINT) -> str:
     try:
         msg = resp.json().get("error", {}).get("message", "")
     except ValueError:
         msg = (resp.text or "")[:200]
-    hint = ""
-    if resp.status_code == 403:
-        hint = (" Add the service account's email as a user on the Search Console property, "
-                "and check the site value with the `sites` command.")
+    hint = forbidden_hint if resp.status_code == 403 else ""
     return f"HTTP {resp.status_code}: {msg}.{hint}"
 
 
 class Client:
+    forbidden_hint = FORBIDDEN_HINT
+
     def __init__(self, session, sleep: Callable[[float], None] = time.sleep,
                  max_tries: int = 5, row_limit: int = ROW_LIMIT, timeout: float = 60):
         self.session, self.sleep = session, sleep
@@ -101,7 +104,7 @@ class Client:
                 self.sleep(float(retry_after) if retry_after.isdigit() else min(2 ** attempt, 60))
                 continue
             if resp.status_code >= 400:
-                raise GSCAPIError(_error_message(resp))
+                raise GSCAPIError(_error_message(resp, self.forbidden_hint))
             return resp.json()
         raise GSCAPIError("unreachable")  # pragma: no cover
 

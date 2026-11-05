@@ -74,11 +74,19 @@ const adsConfigured = ADSENSE.ENABLED && !ADSENSE.CLIENT.includes('XXXX');
         <script is:inline define:vars={{ id: ANALYTICS.GA4_ID, group: contentGroup }}>
           window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', id, { content_group: group });
           // One event per product button click, so GA4 shows which articles and picks earn clicks.
-          document.addEventListener('click', function (e) {
+          // Counts clicks only, never purchases, and sends nothing about the reader.
+          function affiliateClick(e) {
+            if (e.type === 'auxclick' && e.button !== 1) return; // middle-click opens a tab too
             var a = e.target.closest && e.target.closest('a[data-affiliate]');
             if (!a) return;
-            gtag('event', 'affiliate_click', { article: location.pathname, product_name: a.dataset.product, pick: a.dataset.pick, store: a.dataset.store, position: Number(a.dataset.position), link_url: a.href });
-          });
+            gtag('event', 'affiliate_click', {
+              article: location.pathname.replace(/\.html$/, ''), product_name: a.dataset.product, asin: a.dataset.asin || '',
+              link_type: a.dataset.link || '', pick: a.dataset.pick, store: a.dataset.store,
+              position: Number(a.dataset.position) || 0, link_url: a.href, transport_type: 'beacon'
+            });
+          }
+          document.addEventListener('click', affiliateClick);
+          document.addEventListener('auxclick', affiliateClick);
         </script>
       </>
     )}

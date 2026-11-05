@@ -15,6 +15,9 @@ interface Props {
 }
 const { name, pick, asin, url, store = 'Amazon', specs = [], pros = [], cons = [], index } = Astro.props;
 const isAmazon = !url;
+const hasAsin = isAmazon && !!asin && /^[A-Z0-9]{10}$/.test(asin);
+// Sent with the click event: is this a direct product page, an Amazon search, or another store?
+const linkType = !isAmazon ? 'retailer' : hasAsin ? 'product' : 'search';
 const href = url ?? amazonUrl(asin || name);
 // Amazon links are paid affiliate links; direct retailer links are not.
 const rel = isAmazon ? 'nofollow sponsored noopener' : 'nofollow noopener';
@@ -36,6 +39,8 @@ const label = isAmazon ? 'Check price on Amazon' : `Check price at ${store}`;
       data-product={name}
       data-pick={pick}
       data-store={isAmazon ? 'Amazon' : store}
+      data-asin={hasAsin ? asin : undefined}
+      data-link={linkType}
       data-position={typeof index === 'number' ? index + 1 : undefined}
       class="pc-key inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-fg hover:bg-primary/90"
     >

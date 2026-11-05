@@ -131,6 +131,32 @@ sudo nginx -t && sudo systemctl reload nginx
 
 If the folder is missing or not writable, the weekly run skips the dashboard and still writes the reports.
 
+## Product clicks (GA4)
+
+Every product button on the blog sends a GA4 `affiliate_click` event with the product, ASIN,
+link type (`product`, `search` or `retailer`), pick and position. Nothing about the reader is sent.
+`ga4` counts those events per day, page and product with the GA4 Data API, using the same
+service account key. The dashboard then shows product clicks on the overview, in the
+Opportunities table, and per product on each page. These are clicks, not sales. Sales come from
+Amazon Associates reports.
+
+Setup, once:
+
+1. In GA4 Admin > Property access management, add the service account's email as a **Viewer**.
+2. In GA4 Admin > Custom definitions, add two **event-scoped** custom dimensions, for the
+   parameters `product_name` and `asin`. Without them, clicks are still counted per page.
+   GA4 only fills them in for events from the day they're created.
+3. Find the numeric property ID in GA4 Admin > Property details. It is not the `G-` ID.
+4. On the server, put it where cron can read it:
+
+```bash
+echo 'GA4_PROPERTY_ID=123456789' >> ~/.config/seo-agent/env && chmod 600 ~/.config/seo-agent/env
+python3 -m seo_agent ga4 --property 123456789     # first run by hand, to check access
+```
+
+The weekly run fetches the last 120 days each time, because GA4 keeps processing recent days.
+If GA4 fails, the run still finishes, and the dashboard keeps the clicks it already has.
+
 ## Content audit
 
 ```bash
@@ -185,6 +211,7 @@ seo_agent/cli.py       import / sites / fetch / window / score / audit
 seo_agent/content.py   post parser (frontmatter, headings, products, links) and nginx rules
 seo_agent/audit.py     rule-based content audit joined with opportunity scores
 seo_agent/gsc_api.py   Search Console API client: auth, pagination, retries
+seo_agent/ga4_api.py   GA4 Data API client for product button clicks
 seo_agent/dashboard.py static dashboard builder (templates/dashboard.html)
 scripts/weekly.sh      weekly fetch, score, audit and dashboard for cron
 deploy/                nginx snippet for the dashboard

@@ -6,6 +6,7 @@
   python -m seo_agent window [--days 90]            # turn fetched API days into an import
   python -m seo_agent score [--top N] [--json out.json] [--md out.md] [--posts-dir DIR]
   python -m seo_agent audit [--md out.md] [--json out.json]   # content checks + search opportunity
+  python -m seo_agent ga4 --property 123456789 [--days 120]   # product button clicks from GA4
   python -m seo_agent dashboard --out DIR             # private static dashboard (index.html)
 """
 from __future__ import annotations
@@ -21,13 +22,15 @@ from pathlib import Path
 
 from . import config as config_mod
 from .gsc_api import PAGE_DIMS, ROW_DIMS, Client, GSCAPIError, load_key, session_from_key, to_records
+from . import ga4_api
 from .audit import audit_posts, render_audit_md
 from .content import handled_urls, load_posts
 from .dashboard import build_data, render, write
 from .gsc_csv import GSCParseError, load_export
 from .scoring import score_pages
 from .storage import (aggregate, api_date_range, api_sites, build_window_import, connect, fetch_log,
-                      latest_import, observed_query_pages, save_api_day, save_export, save_scores)
+                      latest_import, observed_query_pages, save_api_day, save_export, save_ga4_range,
+                      save_scores)
 
 DEFAULT_DB = os.environ.get("SEO_AGENT_DB", "data/seo_agent.sqlite")
 # The blog's files, when the agent runs inside the aws-infrastructure repo.
@@ -61,6 +64,10 @@ RECHECK_EMPTY_DAYS = 10
 
 def make_client(key: str | None) -> Client:
     return Client(session_from_key(load_key(key)))
+
+
+def make_ga4_client(key: str | None) -> ga4_api.GA4Client:
+    return ga4_api.GA4Client(session_from_key(load_key(key), ga4_api.SCOPE))
 
 
 def pacific_today() -> date:
@@ -152,6 +159,34 @@ def cmd_fetch(a) -> int:
     print(f"fetched {len(days)} days, {days[0]} to {days[-1]}: "
           f"{n_rows:,} query rows, {n_pages:,} page rows")
     print("next: python -m seo_agent window --days 90")
+    return 0
+
+
+def cmd_ga4(a) -> int:
+    prop = (a.property or os.environ.get("GA4_PROPERTY_ID") or "").removeprefix("properties/")
+    if not prop.isdigit():
+        print("error: pass --property (or set GA4_PROPERTY_ID) to the numeric GA4 property ID, "
+              "from GA4 Admin > Property details. It is not the G- measurement ID.", file=sys.stderr)
+        return 2
+    end = a.end or (datetime.now(timezone.utc).date() - timedelta(1)).isoformat()
+    start = a.start or (date.fromisoformat(end) - timedelta(a.days - 1)).isoformat()
+    if start > end:
+        print(f"error: start {start} is after end {end}", file=sys.stderr)
+        return 2
+    try:
+        rows, by_product = make_ga4_client(a.key).clicks(prop, start, end)
+    except GSCAPIError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
+    os.makedirs(os.path.dirname(a.db) or ".", exist_ok=True)
+    con = connect(a.db)
+    save_ga4_range(con, prop, start, end, rows, by_product)
+    total = sum(r["clicks"] for r in rows)
+    print(f"GA4 {start} to {end}: {total:,} product button clicks on "
+          f"{len({r['page_path'] for r in rows})} pages")
+    if not by_product:
+        print("note: counted per page only. Add event-scoped custom dimensions for product_name and asin "
+              "in GA4 Admin > Custom definitions to see clicks per product.")
     return 0
 
 
@@ -375,6 +410,10 @@ def main(argv=None) -> int:
     p.add_argument("--days", type=int, default=90); p.add_argument("--start"); p.add_argument("--end")
     p.add_argument("--refetch", action="store_true", help="fetch days again even if stored")
     p.set_defaults(fn=cmd_fetch)
+    p = sub.add_parser("ga4", help="fetch product button clicks from the GA4 Data API")
+    p.add_argument("--key"); p.add_argument("--property", help="numeric GA4 property ID (or set GA4_PROPERTY_ID)")
+    p.add_argument("--days", type=int, default=120); p.add_argument("--start"); p.add_argument("--end")
+    p.set_defaults(fn=cmd_ga4)
     p = sub.add_parser("window", help="aggregate fetched API days into an import for `score`")
     p.add_argument("--days", type=int, default=90); p.add_argument("--end"); p.add_argument("--site")
     p.set_defaults(fn=cmd_window)
