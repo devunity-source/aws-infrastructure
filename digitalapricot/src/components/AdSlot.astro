@@ -1,13 +1,13 @@
 ---
 /**
- * One AdSense unit. Renders nothing when ads are disabled or the publisher ID is still the placeholder,
- * so a dev build never serves broken ad tags. Fixed min-height prevents layout shift.
+ * One AdSense unit. Renders nothing at all (no placeholder, no empty box) when ads are disabled,
+ * the publisher ID is a placeholder, or this slot has no real unit ID yet.
  */
 import { ADSENSE } from '../lib/site';
 interface Props { slot: keyof typeof ADSENSE.SLOTS; format?: 'auto' | 'fluid' | 'rectangle'; layout?: string; class?: string; label?: boolean }
 const { slot, format = 'auto', layout, class: cls = '', label = true } = Astro.props;
-const configured = ADSENSE.ENABLED && !ADSENSE.CLIENT.includes('XXXX');
 const slotId = ADSENSE.SLOTS[slot];
+const configured = ADSENSE.ENABLED && /^ca-pub-\d{16}$/.test(ADSENSE.CLIENT) && /^\d{10}$/.test(slotId);
 ---
 {configured ? (
   <div class={`ad-slot ${cls}`}>
@@ -23,8 +23,4 @@ const slotId = ADSENSE.SLOTS[slot];
     ></ins>
     <script is:inline>(window.adsbygoogle = window.adsbygoogle || []).push({});</script>
   </div>
-) : (
-  <div class={`ad-slot grid place-items-center ${cls}`} aria-hidden="true">
-    <p class="text-xs text-fg-muted/70">Ad slot “{slot}” (set your AdSense publisher ID in src/lib/site.ts)</p>
-  </div>
-)}
+) : null}

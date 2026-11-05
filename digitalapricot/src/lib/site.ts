@@ -23,16 +23,17 @@ export const REVIEWER = {
   image: '/images/rakan-khaled.jpg',
 };
 
-// Google AdSense. Replace the placeholder with your real publisher ID (ca-pub-XXXXXXXXXXXXXXXX).
-// It must match the ID in public/ads.txt. Set ENABLED to false to ship an ad-free build.
+// Google AdSense. CLIENT must match the ID in public/ads.txt. Set ENABLED to false to ship an ad-free build.
+// With CLIENT set, every page loads the AdSense script, which is what the site review needs.
 export const ADSENSE = {
   ENABLED: true,
-  CLIENT: 'ca-pub-XXXXXXXXXXXXXXXX',
-  // Create these units in the AdSense dashboard and paste the slot IDs here.
+  CLIENT: 'ca-pub-9207857593393521',
+  // Create these units in the AdSense dashboard (Ads > By ad unit) once the site is approved,
+  // and paste their 10-digit slot IDs here. A slot left empty renders nothing.
   SLOTS: {
-    inArticle: '0000000001', // "In-article" format
-    sidebar: '0000000002', // 300x600 or responsive display
-    footer: '0000000003', // responsive display
+    inArticle: '', // "In-article" format
+    sidebar: '', // 300x600 or responsive display
+    footer: '', // responsive display
   },
   AUTO_ADS: false, // true lets Google place extra ads automatically
 };

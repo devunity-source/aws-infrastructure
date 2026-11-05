@@ -1,2 +1,1 @@
-# Replace pub-XXXXXXXXXXXXXXXX with your AdSense publisher ID (same as src/lib/site.ts, without the "ca-" prefix).
-google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+google.com, pub-9207857593393521, DIRECT, f08c47fec0942fa0
