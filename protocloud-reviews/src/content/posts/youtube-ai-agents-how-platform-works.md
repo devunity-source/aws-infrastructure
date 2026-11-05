@@ -1,5 +1,6 @@
 ---
 title: "YouTube and AI: how YouTube uses AI, agents, and Gemini on a billion screens"
+seoTitle: "How YouTube Uses AI: Recommendations, Agents and Gemini"
 description: "How YouTube uses AI for search, recommendations and creation, and where agent tools like Ask YouTube fit in after Google I/O 2026."
 pubDate: "2026-05-22"
 updatedDate: "2026-11-04"
@@ -98,7 +99,7 @@ For creators, **YouTube** **AI** here is a time saver. For viewers, it is more S
 
 ## YouTube AI agents in the wider Google stack
 
-Headlines after I/O often lump several products together. Here is how they relate to **YouTube** without blurring them:
+Headlines after I/O often lump several products together. Gemini is also heading into Android XR glasses, which we cover in our [AI and smart glasses guide](/blog/best-ai-smart-glasses). Here is how they relate to **YouTube** without blurring them:
 
 | Product | Role relative to YouTube |
 |--------|---------------------------|
@@ -130,6 +131,8 @@ Not every **YouTube** **AI** feature launched in 2026. Some have been around for
 Creators sometimes forget these are **AI** because they became boring infrastructure. Viewers notice only when captions are wrong or a claim hits a monetized **YouTube** channel.
 
 ## What YouTube means for builders outside Google
+
+If you want to build systems like this for a living, our guide on [how to land AI jobs in 2026](/blog/land-ai-jobs-2026) covers the roles and skills that get hired.
 
 You might never ship a **YouTube** clone. The design patterns still matter.
 
