@@ -70,7 +70,9 @@ the affiliate button with `rel="nofollow sponsored"`. Set `draft: true` to keep 
 
 Specs and product availability in the seed articles were written in October 2026 and should be
 spot-checked against current listings before publishing. Prices are deliberately left out of the copy;
-the "Check price" button sends readers to the live listing.
+the product button sends readers to the live listing (or, without an ASIN, to an Amazon search, and says so).
+
+Newsletter: set `NEWSLETTER.BUTTONDOWN_USERNAME` in `src/lib/site.ts`. Until then the signup box is hidden.
 
 ## Deploy
 

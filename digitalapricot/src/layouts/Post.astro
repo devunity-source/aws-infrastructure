@@ -6,7 +6,7 @@ import PostCard from '../components/PostCard.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Newsletter from '../components/Newsletter.astro';
 import ReadingProgress from '../components/ReadingProgress.astro';
-import { AFFILIATE, CATEGORIES, REVIEWER, SITE, absUrl, productId, url, webpOf } from '../lib/site';
+import { AFFILIATE, CATEGORIES, NEWSLETTER, REVIEWER, SITE, absUrl, productId, url, webpOf } from '../lib/site';
 
 interface Props { post: CollectionEntry<'posts'>; related: CollectionEntry<'posts'>[]; headings: { depth: number; slug: string; text: string }[] }
 const { post, related, headings } = Astro.props;
@@ -128,7 +128,7 @@ const jsonLd = [
           </ul>
         )}
 
-        <div class="mt-12"><Newsletter /></div>
+        {NEWSLETTER.BUTTONDOWN_USERNAME && <div class="mt-12"><Newsletter /></div>}
       </div>
 
       <aside class="hidden lg:block">

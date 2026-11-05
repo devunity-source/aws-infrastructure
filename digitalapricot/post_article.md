@@ -73,7 +73,7 @@ Each item in `products` takes:
 
 - `name` (required): the product name as shown on the card
 - `pick` (required): the label, e.g. "Best overall", "Best value"
-- `asin` (optional): Amazon ASIN. With it, the button links straight to the product. Without it, the button runs an Amazon search for the name. Your affiliate tag is appended either way
+- `asin` (strongly recommended): Amazon ASIN. With it, the button reads "Check price on Amazon" and links straight to the product. Without it, the button reads "Search on Amazon" and opens a search for the name, which readers trust less and which converts worse. Your affiliate tag is appended either way
 - `url` and `store` (optional): for a product Amazon doesn't sell, set `url` to the retailer's page and `store` to its name. The button then reads "Check price at {store}" and links there without the affiliate tag
 - `specs`, `pros`, `cons` (optional): lists of short strings
 
