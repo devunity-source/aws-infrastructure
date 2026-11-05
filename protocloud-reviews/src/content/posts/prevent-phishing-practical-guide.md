@@ -1,6 +1,7 @@
 ---
 title: "How to prevent phishing: a practical guide to stopping phishing before it spreads"
-description: "Phishing is still the top door into breaches. Learn how to prevent phishing at work and at home, with habits, tools, and drills built around spotting phishing fast."
+seoTitle: "How to Prevent Phishing: A Practical Guide for 2026"
+description: "Phishing is still the top way into breaches. How to prevent phishing at work and at home, with the habits, tools and drills that catch it fast."
 pubDate: "2026-05-21"
 updatedDate: "2026-11-04"
 category: "explainers"
@@ -58,6 +59,8 @@ When in doubt, start a new thread to a known address or call your IT/security te
 - Turn on **unknown-sender filtering** where your OS supports it.
 - Do not install apps from **phishing** “test flight” or sideload links.
 - Treat “wrong number” romance or job offers as probable **phishing** pretexts.
+
+A locked-down phone does not change this. We explain why in [Is the iPhone really unhackable?](/blog/is-iphone-really-unhackable)
 
 ## Build a personal anti-phishing checklist
 

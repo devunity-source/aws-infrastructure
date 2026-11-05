@@ -1,5 +1,6 @@
 ---
 title: "How to land AI jobs in 2026: a practical career guide"
+seoTitle: "How to Land AI Jobs in 2026: A Practical Career Guide"
 description: "Which AI roles are hiring in 2026, the skills that matter, how to build a portfolio, and how to pass interviews without pretending to be a researcher."
 pubDate: "2026-05-25"
 updatedDate: "2026-11-04"
@@ -50,7 +51,7 @@ If you want **AI jobs** that survive the next budget cut, aim closer to producti
 
 ## Skills that get you hired for AI jobs in 2026
 
-You do not need a PhD for most **AI jobs**. You need credible execution.
+You do not need a PhD for most **AI jobs**. You need credible execution. For a real-world picture of the systems these teams build, see [how YouTube uses AI for recommendations and search](/blog/youtube-ai-agents-how-platform-works). For the machine to build on, see [how to choose a developer laptop](/blog/how-to-choose-a-developer-laptop).
 
 ### 1. Software fundamentals (non negotiable)
 

@@ -1,6 +1,6 @@
 ---
 title: "Is the iPhone really unhackable?"
-description: "No phone is perfect. Here is how iPhone security actually works, where iPhone users still get hit, and why social engineering beats most iPhone hardware protections."
+description: "No phone is perfect. How iPhone security actually works, where iPhone users still get hit, and why social engineering beats most of its protections."
 pubDate: "2026-05-22"
 updatedDate: "2026-11-04"
 category: "gadgets"
@@ -31,7 +31,7 @@ Even a patched iPhone faces threats that do not need a Hollywood zero day.
 
 ### Social engineering: the iPhone does not read your mind
 
-The iPhone can block a lot of technical attacks. The iPhone cannot stop you from typing your password into a fake site because a text message told you to. Social engineering is the art of lying convincingly enough that you override your own safety checks.
+The iPhone can block a lot of technical attacks. The iPhone cannot stop you from typing your password into a fake site because a text message told you to. Social engineering is the art of lying convincingly enough that you override your own safety checks. Our [practical guide to preventing phishing](/blog/prevent-phishing-practical-guide) covers the habits that catch it.
 
 Common social engineering plays against iPhone users:
 
