@@ -9,7 +9,8 @@
 #   GSC_SERVICE_ACCOUNT_JSON  key file              (default ~/.config/seo-agent/gsc-key.json)
 #   SEO_AGENT_KEEP_WEEKS  report folders to keep    (default 26)
 #   SEO_DASHBOARD_DIR     where the dashboard goes  (default /var/www/html/seo-dashboard)
-#   GA4_PROPERTY_ID       numeric GA4 property, for product button clicks (optional; skipped if unset)
+#   GA4_PROPERTY_ID       numeric GA4 properties for product button clicks, space-separated
+#                         (optional; skipped if unset)
 #   SEO_AGENT_SKIP_PULL=1 don't update the checkout (for testing)
 #
 # Cron doesn't read ~/.bashrc, so any of these can also go in ~/.config/seo-agent/env,
@@ -64,7 +65,9 @@ agent audit --days 90 --md "$out/audit.md" --json "$out/audit.json"
 
 # Product button clicks from GA4. Optional, and a GA4 problem never fails the run.
 if [ -n "${GA4_PROPERTY_ID:-}" ]; then
-  agent ga4 --property "$GA4_PROPERTY_ID" --days 120 || echo "warning: GA4 fetch failed, the dashboard keeps the last clicks"
+  for prop in $GA4_PROPERTY_ID; do
+    agent ga4 --property "$prop" --days 120 || echo "warning: GA4 fetch failed for $prop, the dashboard keeps its last clicks"
+  done
 else
   echo "note: GA4_PROPERTY_ID is not set, so product clicks were skipped"
 fi

@@ -51,13 +51,15 @@ CREATE TABLE IF NOT EXISTS api_fetches (
   fetched_at TEXT NOT NULL,
   PRIMARY KEY (site, date)
 );
--- GA4 affiliate_click events per day, page and product. product and asin are '' when GA4
--- has no custom dimensions for them, or the click predates them.
+-- GA4 affiliate_click events per property, day, page and product. product and asin are '' when
+-- GA4 has no custom dimensions for them, or the click predates them. Several properties can be
+-- stored (the blog moved to its own GA4 property), and each fetch only replaces its own rows.
 CREATE TABLE IF NOT EXISTS ga4_clicks (
+  property TEXT NOT NULL,
   date TEXT NOT NULL, page_path TEXT NOT NULL,
   product TEXT NOT NULL, asin TEXT NOT NULL,
   clicks INTEGER NOT NULL,
-  PRIMARY KEY (date, page_path, product, asin)
+  PRIMARY KEY (property, date, page_path, product, asin)
 );
 CREATE TABLE IF NOT EXISTS ga4_fetches (
   id INTEGER PRIMARY KEY,
@@ -98,7 +100,24 @@ def connect(path: str | Path, legacy_urls: dict | None = None) -> sqlite3.Connec
     con.create_function("canon", 1, canon, deterministic=True)
     con.execute("PRAGMA foreign_keys = ON")
     con.executescript(SCHEMA)
+    _migrate_ga4_clicks(con)
     return con
+
+
+def _migrate_ga4_clicks(con) -> None:
+    """Databases from v0.5 have ga4_clicks without a property column. Their rows all came from
+    one property, the one in ga4_fetches, so they are copied across with it."""
+    cols = [r[1] for r in con.execute("PRAGMA table_info(ga4_clicks)")]
+    if "property" in cols:
+        return
+    row = con.execute("SELECT property FROM ga4_fetches ORDER BY id DESC LIMIT 1").fetchone()
+    prop = row[0] if row else ""
+    with con:
+        con.execute("ALTER TABLE ga4_clicks RENAME TO ga4_clicks_v05")
+        con.executescript(SCHEMA)  # creates the new ga4_clicks
+        con.execute("INSERT INTO ga4_clicks SELECT ?, date, page_path, product, asin, clicks FROM ga4_clicks_v05",
+                    (prop,))
+        con.execute("DROP TABLE ga4_clicks_v05")
 
 
 def site_page_filter(site: str) -> tuple[str, list[str]]:
@@ -184,15 +203,15 @@ def save_api_day(con, site: str, day: str, rows: list[dict], page_rows: list[dic
 
 
 def save_ga4_range(con, prop: str, start: str, end: str, rows: list[dict], by_product: bool) -> None:
-    """Replace every stored click in [start, end]. GA4 keeps processing recent days,
-    so each run fetches the whole range again."""
+    """Replace this property's stored clicks in [start, end]. GA4 keeps processing recent days,
+    so each run fetches the whole range again. Other properties' rows are left alone."""
     totals: dict[tuple, int] = {}
     for r in rows:
         k = (r["date"], r["page_path"], r["product"], r["asin"])
         totals[k] = totals.get(k, 0) + r["clicks"]
     with con:
-        con.execute("DELETE FROM ga4_clicks WHERE date BETWEEN ? AND ?", (start, end))
-        con.executemany("INSERT INTO ga4_clicks VALUES (?,?,?,?,?)", [(*k, n) for k, n in totals.items()])
+        con.execute("DELETE FROM ga4_clicks WHERE property=? AND date BETWEEN ? AND ?", (prop, start, end))
+        con.executemany("INSERT INTO ga4_clicks VALUES (?,?,?,?,?,?)", [(prop, *k, n) for k, n in totals.items()])
         con.execute("INSERT INTO ga4_fetches (property, date_start, date_end, rows, by_product, fetched_at) "
                     "VALUES (?,?,?,?,?,?)", (prop, start, end, len(rows), int(by_product), _now()))
 

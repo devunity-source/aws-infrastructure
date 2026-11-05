@@ -92,3 +92,33 @@ def test_dashboard_shows_product_clicks(tmp_path, monkeypatch):
     assert d["windows"]["28"]["pages"][0]["product_clicks"] == 4
     assert "<b>" not in re.search(r'type="application/json">(.*?)</script>', html, re.S).group(1)
     assert any(w["product_clicks"] for w in d["weeks"])
+
+
+def test_properties_keep_their_own_rows(tmp_path):
+    con = connect(tmp_path / "x.sqlite")
+    r = {"date": "2026-11-01", "page_path": "/blog/a", "product": "", "asin": "", "clicks": 2}
+    save_ga4_range(con, "410797663", "2026-11-01", "2026-11-02", [r], False)
+    save_ga4_range(con, "562537573", "2026-11-01", "2026-11-02", [{**r, "page_path": "/a", "clicks": 3}], True)
+    save_ga4_range(con, "562537573", "2026-11-01", "2026-11-02", [{**r, "page_path": "/a", "clicks": 3}], True)  # rerun
+    assert [tuple(x) for x in con.execute("SELECT property, SUM(clicks) FROM ga4_clicks GROUP BY property ORDER BY property")] == \
+        [("410797663", 2), ("562537573", 3)]
+
+
+def test_v05_database_is_migrated_with_its_property(tmp_path):
+    import sqlite3
+    path = tmp_path / "old.sqlite"
+    old = sqlite3.connect(path)
+    old.executescript("""
+        CREATE TABLE ga4_clicks (date TEXT NOT NULL, page_path TEXT NOT NULL, product TEXT NOT NULL,
+          asin TEXT NOT NULL, clicks INTEGER NOT NULL, PRIMARY KEY (date, page_path, product, asin));
+        CREATE TABLE ga4_fetches (id INTEGER PRIMARY KEY, property TEXT NOT NULL, date_start TEXT NOT NULL,
+          date_end TEXT NOT NULL, rows INTEGER NOT NULL, by_product INTEGER NOT NULL, fetched_at TEXT NOT NULL);
+        INSERT INTO ga4_fetches VALUES (1, '410797663', '2026-07-08', '2026-11-04', 2, 1, 'x');
+        INSERT INTO ga4_clicks VALUES ('2026-10-06', '/blog/a', '', '', 2), ('2026-11-03', '/blog/b', 'Ray-Ban', '', 1);
+    """)
+    old.commit(); old.close()
+    con = connect(path)
+    assert [tuple(x) for x in con.execute("SELECT property, date, clicks FROM ga4_clicks ORDER BY date")] == \
+        [("410797663", "2026-10-06", 2), ("410797663", "2026-11-03", 1)]
+    connect(path)  # a second open is a no-op
+    assert con.execute("SELECT COUNT(*) FROM ga4_clicks").fetchone()[0] == 2
