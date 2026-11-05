@@ -1,9 +1,9 @@
 # Digital Apricot
 
 Tech buying guides at https://digitalapricot.io, monetised with Google AdSense and Amazon affiliate links.
-Static site built with [Astro](https://astro.build), Tailwind CSS 4 and MDX. Burnt-apricot `#b8460f` and
-leaf-green `#2e6a4c` on a warm cream surface, Space Grotesk. The mark is `src/components/ApricotMark.astro`
-(also `public/favicon.svg`).
+Static site built with [Astro](https://astro.build), Tailwind CSS 4 and MDX. Colours come from the logo:
+navy `#060d22` text and orange accents (`#b83c00`, the logo's `#fd6a01` deepened for text contrast), Space
+Grotesk. The original logo and app icon are in `brand/`. `public/images/logo.*` and the favicons are made from them.
 
 Served from the root of `digitalapricot.io` on the same nginx box as protocloudsolutions.com. It used to live
 at `protocloudsolutions.com/blog`; `deploy/protocloud-blog.conf` now 301s every old URL to the new domain.

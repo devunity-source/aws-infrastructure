@@ -1,9 +1,11 @@
 ---
-import ApricotMark from './ApricotMark.astro';
 import { SITE, url } from '../lib/site';
 const { class: cls = '' } = Astro.props;
+// brand/digital-apricot-logo.png, trimmed and resized to public/images/logo.{png,webp} (948x176).
 ---
-<a href={url('/')} class={`inline-flex items-center gap-2.5 ${cls}`} aria-label={`${SITE.name} home`}>
-  <ApricotMark size={40} />
-  <span class="text-[1.35rem] font-bold leading-none tracking-tight text-fg">Digital<span class="text-primary">Apricot</span></span>
+<a href={url('/')} class={`inline-flex items-center ${cls}`} aria-label={`${SITE.name} home`}>
+  <picture>
+    <source srcset={url('/images/logo.webp')} type="image/webp" />
+    <img src={url('/images/logo.png')} alt={SITE.name} width="948" height="176" class="h-9 w-auto md:h-10" />
+  </picture>
 </a>
