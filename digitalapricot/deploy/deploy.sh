@@ -12,7 +12,7 @@ DEPLOY_PATH="${DEPLOY_PATH:-/var/www/html/digitalapricot}"
 SSH_OPTS=(-o StrictHostKeyChecking=accept-new)
 [[ -n "${SSH_KEY:-}" ]] && SSH_OPTS+=(-i "$SSH_KEY")
 
-if grep -q 'ca-pub-XXXX' src/lib/site.ts; then
+if ! grep -qE "CLIENT: 'ca-pub-[0-9]{16}'" src/lib/site.ts; then
   echo "warning: AdSense publisher ID is still the placeholder in src/lib/site.ts, ads will not render" >&2
 fi
 

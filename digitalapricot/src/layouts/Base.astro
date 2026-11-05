@@ -24,7 +24,7 @@ const { title, description = SITE.description, image = SITE.ogImage, type = 'web
 const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, ''), Astro.site).toString();
 const ogImage = absUrl(image);
 const fullTitle = seoTitle ? seoTitle : title === SITE.name ? `${SITE.name} — ${SITE.homeTitle}` : `${title} — ${SITE.name}`;
-const adsConfigured = ADSENSE.ENABLED && !ADSENSE.CLIENT.includes('XXXX');
+const adsConfigured = ADSENSE.ENABLED && /^ca-pub-\d{16}$/.test(ADSENSE.CLIENT);
 ---
 <!doctype html>
 <html lang="en">

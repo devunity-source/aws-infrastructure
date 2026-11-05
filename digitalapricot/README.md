@@ -14,7 +14,7 @@ Three placeholders to replace, all in one place:
 
 | What | Where | Looks like |
 |---|---|---|
-| AdSense publisher ID | `src/lib/site.ts` (`ADSENSE.CLIENT`) and `public/ads.txt` | `ca-pub-1234567890123456` / `pub-1234567890123456` |
+| AdSense publisher ID (set: `ca-pub-9207857593393521`) | `src/lib/site.ts` (`ADSENSE.CLIENT`) and `public/ads.txt` | `ca-pub-` + 16 digits / `pub-` + 16 digits |
 | AdSense ad unit slot IDs | `src/lib/site.ts` (`ADSENSE.SLOTS`) | 10-digit numbers from the AdSense "Ads > By ad unit" page |
 | Amazon Associates tag | `src/lib/site.ts` (`AFFILIATE.AMAZON_TAG`) | `yourname-20` |
 
@@ -122,8 +122,9 @@ Google reviews the site before serving ads. What they look for, and what is alre
 - [x] About and contact pages (`/about`, `/contact`)
 - [x] `ads.txt` served as plain text at the root
 - [x] Mobile layout, fast load, no layout shift from ads (slots reserve height)
-- [x] 15 to 20 substantial original articles. Eighteen are here. Keep publishing anyway, Google likes a cadence.
-- [ ] Domain live on HTTPS for a few weeks with some real traffic
+- [x] AdSense script on every page and `ads.txt` with the publisher ID. Slots without a unit ID render nothing.
+- [ ] Substantial, first-hand content and a steady publishing cadence (the first review, on protocloudsolutions.com, was rejected as low value content)
+- [ ] Domain live on HTTPS for a few weeks with some real traffic (live since 2026-11-05)
 - [ ] EU consent message configured in AdSense > Privacy & messaging (required for EEA/UK visitors)
 
 Once approved, create three ad units (in-article, display for sidebar, display for footer) and paste the
