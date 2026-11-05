@@ -1,7 +1,0 @@
----
-import { SITE, url } from '../lib/site';
-const { class: cls = '' } = Astro.props;
----
-<a href={url('/')} class={`inline-flex items-center ${cls}`} aria-label={`${SITE.name} home`}>
-  <img src={url(SITE.logo)} alt={SITE.name} width="118" height="64" class="h-16 w-auto" />
-</a>

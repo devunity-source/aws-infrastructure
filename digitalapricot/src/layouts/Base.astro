@@ -1,0 +1,108 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import KeyboardRow from '../components/KeyboardRow.astro';
+import { ADSENSE, ANALYTICS, SITE, absUrl, url } from '../lib/site';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  type?: 'website' | 'article';
+  publishedTime?: Date;
+  modifiedTime?: Date;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  noindex?: boolean;
+  /** GA4 content group: the category label on posts and category pages, "Blog" elsewhere. */
+  contentGroup?: string;
+  /** Full <title> used verbatim (no site-name suffix) when a post sets seoTitle. */
+  seoTitle?: string;
+}
+const { title, description = SITE.description, image = SITE.ogImage, type = 'website', publishedTime, modifiedTime, jsonLd, noindex = false, contentGroup = 'Blog', seoTitle } = Astro.props;
+// Canonical URLs never carry .html (the server maps /x to x.html).
+const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, ''), Astro.site).toString();
+const ogImage = absUrl(image);
+const fullTitle = seoTitle ? seoTitle : title === SITE.name ? `${SITE.name} — ${SITE.homeTitle}` : `${title} — ${SITE.name}`;
+const adsConfigured = ADSENSE.ENABLED && !ADSENSE.CLIENT.includes('XXXX');
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
+    <meta name="theme-color" content="#fffaf4" />
+    <link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
+    <link rel="icon" type="image/png" sizes="32x32" href={url('/favicon-32.png')} />
+    <link rel="icon" type="image/png" sizes="192x192" href={url('/favicon-192.png')} />
+    <link rel="apple-touch-icon" href={url('/apple-touch-icon.png')} />
+    <link rel="alternate" type="application/rss+xml" title={SITE.name} href={url('/rss.xml')} />
+    <link rel="sitemap" href={url('/sitemap-index.xml')} />
+
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content={SITE.locale} />
+    {publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
+    {modifiedTime && <meta property="article:modified_time" content={modifiedTime.toISOString()} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    {SITE.twitter && <meta name="twitter:site" content={SITE.twitter} />}
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+
+    {ANALYTICS.GOOGLE_TAG_ID && (
+      <>
+        {/* The site's Google tag. Its configuration (GA4 property, enhanced measurement) lives in Google, not here. */}
+        <script is:inline async src={`https://www.googletagmanager.com/gtm.js?id=${ANALYTICS.GOOGLE_TAG_ID}`}></script>
+        <script is:inline define:vars={{ ga4: ANALYTICS.GA4_ID, group: contentGroup }}>
+          window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());
+          gtag('set', { content_group: group });
+          // One event per product button click, so GA4 shows which articles and picks earn clicks.
+          // Counts clicks only, never purchases, and sends nothing about the reader.
+          function affiliateClick(e) {
+            if (e.type === 'auxclick' && e.button !== 1) return; // middle-click opens a tab too
+            var a = e.target.closest && e.target.closest('a[data-affiliate]');
+            if (!a) return;
+            gtag('event', 'affiliate_click', {
+              article: location.pathname.replace(/\.html$/, ''), product_name: a.dataset.product, asin: a.dataset.asin || '',
+              link_type: a.dataset.link || '', pick: a.dataset.pick, store: a.dataset.store,
+              position: Number(a.dataset.position) || 0, link_url: a.href, transport_type: 'beacon', send_to: ga4
+            });
+          }
+          document.addEventListener('click', affiliateClick);
+          document.addEventListener('auxclick', affiliateClick);
+        </script>
+      </>
+    )}
+    {adsConfigured && (
+      <script is:inline async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE.CLIENT}`} crossorigin="anonymous"></script>
+    )}
+    {adsConfigured && ADSENSE.AUTO_ADS && (
+      <script is:inline define:vars={{ client: ADSENSE.CLIENT }}>
+        (adsbygoogle = window.adsbygoogle || []).push({ google_ad_client: client, enable_page_level_ads: true });
+      </script>
+    )}
+  </head>
+  <body id="top" class="min-h-screen flex flex-col">
+    <Header />
+    <main class="flex-1">
+      <slot />
+    </main>
+    <KeyboardRow />
+    <Footer />
+  </body>
+</html>

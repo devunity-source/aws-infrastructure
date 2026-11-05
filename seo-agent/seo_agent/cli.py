@@ -34,7 +34,7 @@ from .storage import (aggregate, api_date_range, api_sites, build_window_import,
 
 DEFAULT_DB = os.environ.get("SEO_AGENT_DB", "data/seo_agent.sqlite")
 # The blog's files, when the agent runs inside the aws-infrastructure repo.
-REPO_BLOG = Path(__file__).resolve().parents[2] / "protocloud-reviews"
+REPO_BLOG = Path(__file__).resolve().parents[2] / "digitalapricot"
 REPO_POSTS_DIR = REPO_BLOG / "src" / "content" / "posts"
 REPO_NGINX = REPO_BLOG / "deploy" / "protocloud-blog.conf"
 
@@ -196,12 +196,9 @@ def cmd_window(a) -> int:
     if not hi:
         print("error: no API data yet. Run the `fetch` command first.", file=sys.stderr)
         return 2
-    sites = api_sites(con)
-    site = a.site or (sites[0] if len(sites) == 1 else None)
-    if not site:
-        print(f"error: data for several properties is stored ({', '.join(sites)}). Pass --site.",
-              file=sys.stderr)
-        return 2
+    # Every stored property goes into one window (the blog moved domains, so its history sits
+    # in two properties). Old article URLs are merged with their new ones by canon().
+    site = a.site or " + ".join(api_sites(con))
     end = a.end or hi
     start = (date.fromisoformat(end) - timedelta(a.days - 1)).isoformat()
     if start < lo:
@@ -231,7 +228,7 @@ def render_md(imp, results, summary, top: int) -> str:
           "|---|---|---|---|---|---|---|---|"]
     for i, r in enumerate(results[:top], 1):
         m = r.metrics
-        slug = r.page.split("/blog/")[-1]
+        slug = r.page.rstrip("/").rsplit("/", 1)[-1]
         L.append(f"| {i} | {slug} | **{r.score:.0f}** | {m['impressions']:,} | {m['clicks']} | "
                  f"{m['ctr']:.2%} | {m['position']:.1f} | {', '.join(sorted(set(r.flags))) or ''} |")
     for i, r in enumerate(results[:top], 1):
@@ -386,9 +383,9 @@ def main(argv=None) -> int:
     p.add_argument("--config"); p.add_argument("--top", type=int, default=10)
     p.add_argument("--json"); p.add_argument("--md")
     p.add_argument("--posts-dir", help="blog posts folder, for the dead_url check. "
-                   "Defaults to protocloud-reviews/src/content/posts in this repo.")
+                   "Defaults to digitalapricot/src/content/posts in this repo.")
     p.add_argument("--nginx", help="blog nginx snippet with 410 and 301 rules. "
-                   "Defaults to protocloud-reviews/deploy/protocloud-blog.conf in this repo.")
+                   "Defaults to digitalapricot/deploy/protocloud-blog.conf in this repo.")
     p.add_argument("--days", type=int, help="score the latest import covering exactly this many days")
     p.set_defaults(fn=cmd_score)
     p = sub.add_parser("audit", help="content checks on every post, joined with search opportunity")

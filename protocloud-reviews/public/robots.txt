@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://protocloudsolutions.com/blog/sitemap-index.xml

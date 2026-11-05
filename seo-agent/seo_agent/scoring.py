@@ -28,10 +28,35 @@ class PageScore:
 
 # ---------- page classification ----------
 
+SLUG = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+
+
+def canonical_url(url: str, cfg: dict) -> str:
+    """Rewrite an old article URL to where it lives now (cfg legacy_urls), without .html.
+    Anything else comes back unchanged."""
+    for old, new in (cfg.get("legacy_urls") or {}).items():
+        if url.startswith(old):
+            url = new + url[len(old):]
+            break
+    else:
+        return url
+    return url[:-5] if url.endswith(".html") else url
+
+
+def _host(u: str) -> str:
+    h = (urlparse(u).hostname or "").lower()
+    return h[4:] if h.startswith("www.") else h
+
+
 def slug_of(url: str, cfg: dict) -> str | None:
-    """Return the article slug, or None if the URL isn't a blog article."""
+    """Return the article slug, or None if the URL isn't an article on the site.
+    The host must be the site's (or an old address in legacy_urls), so pages of another
+    site in the same Search Console property never count as articles."""
+    url = canonical_url(url, cfg)
     p = urlparse(url)
     if p.fragment or p.query:
+        return None
+    if p.netloc and _host(url) != _host(cfg["site"]):
         return None
     path = p.path.rstrip("/")
     prefix = cfg["article_prefix"].rstrip("/")
@@ -40,7 +65,7 @@ def slug_of(url: str, cfg: dict) -> str | None:
     if any(path.startswith(x.rstrip("/")) for x in cfg["non_article_prefixes"]):
         return None
     slug = path[len(prefix) + 1:]
-    if "/" in slug or slug in cfg["non_article_slugs"]:
+    if not SLUG.match(slug) or slug in cfg["non_article_slugs"]:
         return None
     return slug
 

@@ -4,7 +4,8 @@
 #
 #   SEO_AGENT_REPO        repo checkout            (default ~/aws-infrastructure)
 #   SEO_AGENT_HOME        data, reports and logs    (default ~/seo-agent-data)
-#   GSC_SITE              Search Console property   (default https://protocloudsolutions.com/)
+#   GSC_SITE              Search Console properties, space-separated
+#                         (default: https://protocloudsolutions.com/ sc-domain:digitalapricot.io)
 #   GSC_SERVICE_ACCOUNT_JSON  key file              (default ~/.config/seo-agent/gsc-key.json)
 #   SEO_AGENT_KEEP_WEEKS  report folders to keep    (default 26)
 #   SEO_DASHBOARD_DIR     where the dashboard goes  (default /var/www/html/seo-dashboard)
@@ -21,7 +22,8 @@ ENV_FILE="${SEO_AGENT_ENV:-$HOME/.config/seo-agent/env}"
 
 REPO="${SEO_AGENT_REPO:-$HOME/aws-infrastructure}"
 DATA="${SEO_AGENT_HOME:-$HOME/seo-agent-data}"
-SITE="${GSC_SITE:-https://protocloudsolutions.com/}"
+# The old property holds the blog's history before the move; the new one everything after.
+SITES="${GSC_SITE:-https://protocloudsolutions.com/ sc-domain:digitalapricot.io}"
 KEEP_WEEKS="${SEO_AGENT_KEEP_WEEKS:-26}"
 export GSC_SERVICE_ACCOUNT_JSON="${GSC_SERVICE_ACCOUNT_JSON:-$HOME/.config/seo-agent/gsc-key.json}"
 export SEO_AGENT_DB="$DATA/seo_agent.sqlite"
@@ -48,7 +50,12 @@ mkdir -p "$out"
 cd "$REPO/seo-agent"
 agent() { python3 -m seo_agent "$@"; }
 
-agent fetch --site "$SITE" --days 120          # incremental: only new days are fetched
+# Incremental: only new days are fetched. One property failing (e.g. no access yet) doesn't stop the run.
+fetched=0
+for site in $SITES; do
+  if agent fetch --site "$site" --days 120; then fetched=1; else echo "warning: fetch failed for $site"; fi
+done
+[ "$fetched" = 1 ] || { echo "error: no Search Console property could be fetched" >&2; exit 2; }
 agent window --days 28
 agent score --days 28 --top 30 --md "$out/opportunities-28d.md" --json "$out/scores-28d.json"
 agent window --days 90

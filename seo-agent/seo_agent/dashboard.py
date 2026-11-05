@@ -15,14 +15,15 @@ from dataclasses import asdict
 from datetime import date, datetime, timezone
 from importlib import resources
 from pathlib import Path
+from urllib.parse import urlparse
 
 from .scoring import slug_of
 
 WEEKS_PAGE = """
-SELECT date(date, 'weekday 0', '-6 days') AS week, page,
+SELECT date(date, 'weekday 0', '-6 days') AS week, canon(page) AS page,
        SUM(clicks) AS clicks, SUM(impressions) AS impressions,
        CASE WHEN SUM(impressions) > 0 THEN SUM(position * impressions) / SUM(impressions) END AS position
-FROM gsc_page_rows GROUP BY week, page ORDER BY week
+FROM gsc_page_rows GROUP BY week, canon(page) ORDER BY week
 """
 WEEK_DAYS = """
 SELECT date(date, 'weekday 0', '-6 days') AS week, COUNT(DISTINCT date) AS days
@@ -57,6 +58,11 @@ def _affiliate(con, cfg: dict) -> tuple[dict | None, dict, dict]:
     pages: dict[str, dict] = {}
 
     def slug(path):
+        # GA4 gives paths only. A path under an old address (/blog/x) is read as that address.
+        for old in cfg.get("legacy_urls") or {}:
+            p = urlparse(old)
+            if path.startswith(p.path) and p.path != "/":
+                return slug_of(f"{p.scheme}://{p.netloc}{path}", cfg)
         return slug_of(cfg["site"].rstrip("/") + path.removesuffix(".html"), cfg)
 
     for r in con.execute("SELECT page_path, date, product, asin, clicks FROM ga4_clicks WHERE date >= ?",
@@ -158,9 +164,9 @@ def build_data(con, cfg: dict, windows: dict, audits: list, posts: dict, handled
     queries: dict[str, list] = {}
     if q_start:
         for r in con.execute(
-                "SELECT page, query, SUM(clicks) AS clicks, SUM(impressions) AS impressions, "
+                "SELECT canon(page) AS page, query, SUM(clicks) AS clicks, SUM(impressions) AS impressions, "
                 "SUM(position * impressions) / SUM(impressions) AS position FROM gsc_rows "
-                "WHERE date BETWEEN ? AND ? GROUP BY page, query HAVING SUM(impressions) > 0 "
+                "WHERE date BETWEEN ? AND ? GROUP BY canon(page), query HAVING SUM(impressions) > 0 "
                 "ORDER BY impressions DESC", (q_start, q_end)):
             s = slug_of(r["page"], cfg)
             if s and len(queries.setdefault(s, [])) < 50:
