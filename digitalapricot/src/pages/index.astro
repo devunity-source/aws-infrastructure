@@ -5,7 +5,7 @@ import PostCard from '../components/PostCard.astro';
 import AdSlot from '../components/AdSlot.astro';
 import Newsletter from '../components/Newsletter.astro';
 import RetroMonitor from '../components/RetroMonitor.astro';
-import { CATEGORIES, SITE, url } from '../lib/site';
+import { CATEGORIES, NEWSLETTER, SITE, url } from '../lib/site';
 
 const posts = (await getCollection('posts', ({ data }) => !data.draft)).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 const featured = posts.find((p) => p.data.featured) ?? posts[0];
@@ -69,5 +69,5 @@ const jsonLd = { '@context': 'https://schema.org', '@type': 'WebSite', name: SIT
     </div>
   </section>
 
-  <section class="mx-auto mt-20 max-w-3xl px-4"><Newsletter /></section>
+  {NEWSLETTER.BUTTONDOWN_USERNAME && <section class="mx-auto mt-20 max-w-3xl px-4"><Newsletter /></section>}
 </Base>

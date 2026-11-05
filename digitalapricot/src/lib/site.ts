@@ -38,6 +38,13 @@ export const ADSENSE = {
   AUTO_ADS: false, // true lets Google place extra ads automatically
 };
 
+// Newsletter, run by Buttondown (double opt-in: subscribers confirm by email before they're added).
+// USERNAME is the Buttondown newsletter username (buttondown.com/<username>). While it is empty the
+// signup box is hidden rather than falling back to a mailto: form.
+export const NEWSLETTER = {
+  BUTTONDOWN_USERNAME: '',
+};
+
 // Amazon Associates tracking ID.
 export const AFFILIATE = {
   AMAZON_TAG: 'protocloudsol-20',
