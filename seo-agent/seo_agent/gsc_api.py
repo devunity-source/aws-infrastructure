@@ -70,7 +70,10 @@ def _error_message(resp, forbidden_hint: str = FORBIDDEN_HINT) -> str:
     except ValueError:
         msg = (resp.text or "")[:200]
     hint = forbidden_hint if resp.status_code == 403 else ""
-    return f"HTTP {resp.status_code}: {msg}.{hint}"
+    if "has not been used in project" in msg or "it is disabled" in msg:
+        # The API is off in the key's Google Cloud project. Google's message has the link to enable it.
+        hint = " Enable the API at the link above, wait a few minutes, then run again."
+    return f"HTTP {resp.status_code}: {msg.rstrip('.')}.{hint}"
 
 
 class Client:
