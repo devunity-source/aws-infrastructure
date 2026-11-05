@@ -38,6 +38,48 @@ def _totals(con, start: str, end: str) -> dict:
             "ctr": clicks / imp if imp else 0.0, "position": pos_w / imp if imp else None}
 
 
+def _affiliate(con, cfg: dict) -> tuple[dict | None, dict, dict]:
+    """GA4 product button clicks: (summary, {slug: per-page data}, {week: clicks}).
+    The summary is None when GA4 has never been fetched."""
+    f = con.execute("SELECT MIN(date_start), MAX(date_end), MAX(fetched_at) FROM ga4_fetches").fetchone()
+    if not f or not f[1]:
+        return None, {}, {}
+    lo, hi, fetched = f
+    last = con.execute("SELECT by_product FROM ga4_fetches ORDER BY id DESC LIMIT 1").fetchone()[0]
+
+    def total(start, end):
+        return con.execute("SELECT COALESCE(SUM(clicks), 0) FROM ga4_clicks WHERE date BETWEEN ? AND ?",
+                           (start, end)).fetchone()[0]
+
+    summary = {"from": lo, "to": hi, "last_fetch": fetched, "by_product": bool(last),
+               "current": total(_shift(hi, -27), hi), "previous": total(_shift(hi, -55), _shift(hi, -28)),
+               "start90": _shift(hi, -89)}
+    pages: dict[str, dict] = {}
+
+    def slug(path):
+        return slug_of(cfg["site"].rstrip("/") + path.removesuffix(".html"), cfg)
+
+    for r in con.execute("SELECT page_path, date, product, asin, clicks FROM ga4_clicks WHERE date >= ?",
+                         (summary["start90"],)):
+        s = slug(r["page_path"])
+        if not s:
+            continue
+        pg = pages.setdefault(s, {"clicks28": 0, "clicks90": 0, "products": {}, "by_date": {}})
+        pg["clicks90"] += r["clicks"]
+        if r["date"] >= _shift(hi, -27):
+            pg["clicks28"] += r["clicks"]
+        pg["by_date"][r["date"]] = pg["by_date"].get(r["date"], 0) + r["clicks"]
+        if r["product"] or r["asin"]:
+            k = (r["product"], r["asin"])
+            pg["products"][k] = pg["products"].get(k, 0) + r["clicks"]
+    for pg in pages.values():
+        pg["products"] = [{"product": p, "asin": a, "clicks": n}
+                          for (p, a), n in sorted(pg["products"].items(), key=lambda x: -x[1])]
+    weeks = {r[0]: r[1] for r in con.execute(
+        "SELECT date(date, 'weekday 0', '-6 days') AS week, SUM(clicks) FROM ga4_clicks GROUP BY week")}
+    return summary, pages, weeks
+
+
 def _shift(d: str, days: int) -> str:
     return date.fromordinal(date.fromisoformat(d).toordinal() + days).isoformat()
 
@@ -72,6 +114,10 @@ def build_data(con, cfg: dict, windows: dict, audits: list, posts: dict, handled
         weeks.append({"week": wk, "clicks": w["clicks"], "impressions": w["impressions"],
                       "position": w["_pw"] / w["impressions"] if w["impressions"] else None,
                       "partial": days_in.get(wk, 0) < 7})
+    affiliate, aff_pages, aff_weeks = _affiliate(con, cfg)
+    for w in weeks:
+        covered = affiliate and _shift(w["week"], 6) >= affiliate["from"]  # no bar before GA4 data starts
+        w["product_clicks"] = aff_weeks.get(w["week"], 0) if covered else None
     week_keys = [w["week"] for w in weeks]
 
     def page_series(slug: str) -> list[dict]:
@@ -92,9 +138,16 @@ def build_data(con, cfg: dict, windows: dict, audits: list, posts: dict, handled
         if days not in windows:
             return None
         imp, results, summary = windows[days]
+
+        def product_clicks(slug):
+            pg = aff_pages.get(slug)
+            if not affiliate or not pg:
+                return 0 if affiliate else None
+            return sum(n for d, n in pg["by_date"].items() if imp["date_start"] <= d <= imp["date_end"])
         return {"start": imp["date_start"], "end": imp["date_end"], "source": imp["source"],
                 "query_mapping": summary["query_mapping"],
-                "pages": [{**asdict(r), "slug": slug_of(r.page, cfg)} for r in results],
+                "pages": [{**asdict(r), "slug": slug_of(r.page, cfg),
+                           "product_clicks": product_clicks(slug_of(r.page, cfg))} for r in results],
                 "handled": summary.get("handled_urls", {}), "dead": summary.get("dead_urls", []),
                 "cannibalisation": summary.get("cannibalisation", []),
                 "templated_impressions": summary.get("templated_impressions", 0)}
@@ -115,7 +168,7 @@ def build_data(con, cfg: dict, windows: dict, audits: list, posts: dict, handled
                                    "impressions": r["impressions"], "position": r["position"]})
 
     audit_by = {a.slug: a.to_dict() for a in audits}
-    slugs = sorted(set(posts) | set(per_page) | set(audit_by))
+    slugs = sorted(set(posts) | set(per_page) | set(audit_by) | set(aff_pages))
     pages = {}
     for s in slugs:
         if s in handled:
@@ -125,12 +178,14 @@ def build_data(con, cfg: dict, windows: dict, audits: list, posts: dict, handled
             "slug": s, "title": str(meta.get("title", s)), "category": meta.get("category"),
             "url": f"{cfg['site'].rstrip('/')}{cfg['article_prefix']}{s}",
             "has_post": s in posts, "series": page_series(s), "queries": queries.get(s, []),
-            "history": history.get(s, []), "audit": audit_by.get(s)}
+            "history": history.get(s, []), "audit": audit_by.get(s),
+            "affiliate": ({k: v for k, v in aff_pages.get(s, {"clicks28": 0, "clicks90": 0, "products": []}).items()
+                           if k != "by_date"} if affiliate else None)}
 
     return {
         "generated": datetime.now(timezone.utc).isoformat(timespec="minutes"),
         "site": cfg["site"], "data_from": first, "data_to": last, "last_fetch": fetched_at,
-        "kpis": kpis, "weeks": weeks,
+        "kpis": kpis, "weeks": weeks, "affiliate": affiliate,
         "windows": {str(d): window_payload(d) for d in (28, 90)},
         "audit": [a.to_dict() for a in audits],
         "pages": pages, "handled": handled,

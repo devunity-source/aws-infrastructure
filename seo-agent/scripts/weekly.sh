@@ -8,8 +8,16 @@
 #   GSC_SERVICE_ACCOUNT_JSON  key file              (default ~/.config/seo-agent/gsc-key.json)
 #   SEO_AGENT_KEEP_WEEKS  report folders to keep    (default 26)
 #   SEO_DASHBOARD_DIR     where the dashboard goes  (default /var/www/html/seo-dashboard)
+#   GA4_PROPERTY_ID       numeric GA4 property, for product button clicks (optional; skipped if unset)
 #   SEO_AGENT_SKIP_PULL=1 don't update the checkout (for testing)
+#
+# Cron doesn't read ~/.bashrc, so any of these can also go in ~/.config/seo-agent/env,
+# one VAR=value per line. That file is read first if it exists.
 set -euo pipefail
+
+ENV_FILE="${SEO_AGENT_ENV:-$HOME/.config/seo-agent/env}"
+# shellcheck source=/dev/null
+[ -r "$ENV_FILE" ] && . "$ENV_FILE"
 
 REPO="${SEO_AGENT_REPO:-$HOME/aws-infrastructure}"
 DATA="${SEO_AGENT_HOME:-$HOME/seo-agent-data}"
@@ -46,6 +54,13 @@ agent score --days 28 --top 30 --md "$out/opportunities-28d.md" --json "$out/sco
 agent window --days 90
 agent score --days 90 --top 40 --md "$out/opportunities-90d.md" --json "$out/scores-90d.json"
 agent audit --days 90 --md "$out/audit.md" --json "$out/audit.json"
+
+# Product button clicks from GA4. Optional, and a GA4 problem never fails the run.
+if [ -n "${GA4_PROPERTY_ID:-}" ]; then
+  agent ga4 --property "$GA4_PROPERTY_ID" --days 120 || echo "warning: GA4 fetch failed, the dashboard keeps the last clicks"
+else
+  echo "note: GA4_PROPERTY_ID is not set, so product clicks were skipped"
+fi
 
 # The dashboard is served by nginx, so it goes outside the private data folder.
 # A dashboard problem never fails the run: the reports above are already written.

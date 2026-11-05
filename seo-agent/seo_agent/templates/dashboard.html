@@ -225,7 +225,8 @@ ul.plain { list-style: none; padding: 0; margin: 0; }
       [["Clicks, last 28 days", num(c.clicks), delta(c.clicks, p.clicks)],
        ["Impressions", num(c.impressions), delta(c.impressions, p.impressions)],
        ["Click-through rate", pct(c.ctr), delta(c.ctr, p.ctr, false, true)],
-       ["Average position", pos(c.position), delta(c.position, p.position, true, false, true)]].forEach(function (t) {
+       ["Average position", pos(c.position), delta(c.position, p.position, true, false, true)]].concat(
+        D.affiliate ? [["Product clicks, 28 days", num(D.affiliate.current), delta(D.affiliate.current, D.affiliate.previous)]] : []).forEach(function (t) {
         out.push('<div class="card kpi"><div class="label">' + t[0] + '</div><div class="value">' + t[1] + "</div>" + t[2] + "</div>");
       });
       out.push("</div>");
@@ -234,6 +235,7 @@ ul.plain { list-style: none; padding: 0; margin: 0; }
              chartCard("Impressions per week", D.weeks, "impressions", { bars: true }) +
              chartCard("Clicks per week", D.weeks, "clicks", { bars: true, color: "#1b7f3b" }) + "</div>");
     if (D.weeks.some(function (w) { return w.partial; })) out.push('<p class="note">Faded bars are weeks with less than seven days of data.</p>');
+    out.push(affiliateOverview());
 
     var w = win("28") || win("90");
     if (w) {
@@ -264,6 +266,34 @@ ul.plain { list-style: none; padding: 0; margin: 0; }
     return out.join("");
   }
 
+  function affiliateNote() {
+    var a = D.affiliate;
+    return "GA4 product button clicks, " + day(a.from) + " to " + day(a.to) + ". Clicks only: purchases come from Amazon reports." +
+           (a.by_product ? "" : " Per page only, because GA4 has no custom dimensions for product_name and asin yet.");
+  }
+
+  function affiliateOverview() {
+    var a = D.affiliate;
+    if (!a) return '<h2>Product clicks</h2><div class="card empty">No GA4 data yet. Run the <code>ga4</code> command to add product button clicks.</div>';
+    var rows = Object.keys(D.pages).map(function (s) {
+      var x = D.pages[s].affiliate || {};
+      return { slug: s, c28: x.clicks28 || 0, c90: x.clicks90 || 0, top: (x.products || [])[0] };
+    }).filter(function (r) { return r.c90; });
+    rows = sortRows(rows, "aff", "c28", "desc");
+    var out = ['<h2>Product clicks</h2><div class="grid">' +
+               chartCard("Product button clicks per week", D.weeks, "product_clicks", { bars: true, color: "#b7791f", wide: true }) + "</div>"];
+    if (!rows.length) return out.join("") + '<div class="card empty" style="margin-top:12px">No product button clicks in the last 90 days.</div><p class="note">' + affiliateNote() + "</p>";
+    out.push('<div class="tbl-wrap" style="margin-top:12px"><table><thead><tr>' + th("aff", "slug", "Page", "", "c28", "desc") +
+             th("aff", "c28", "Clicks, 28 days", "num", "c28", "desc") + th("aff", "c90", "90 days", "num", "c28", "desc") +
+             "<th>Most clicked product</th></tr></thead><tbody>");
+    rows.slice(0, 10).forEach(function (r) {
+      out.push("<tr><td>" + pageLink(r.slug) + '</td><td class="num">' + num(r.c28) + '</td><td class="num">' + num(r.c90) + "</td><td>" +
+               (r.top ? esc(r.top.product || r.top.asin) + ' <span class="muted">(' + num(r.top.clicks) + ")</span>" : '<span class="muted">n/a</span>') + "</td></tr>");
+    });
+    out.push("</tbody></table></div><p class=\"note\">" + affiliateNote() + "</p>");
+    return out.join("");
+  }
+
   function opportunities() {
     var w = win(state.win);
     var out = ['<h1>Opportunities</h1><p class="sub">Pages ranked by how much a change could pay off. Score is 0 to 100.</p>',
@@ -276,19 +306,20 @@ ul.plain { list-style: none; padding: 0; margin: 0; }
     out.push('<p class="note">' + day(w.start) + " to " + day(w.end) + ". Queries mapped to pages: " + esc(w.query_mapping) + ".</p>");
     var rows = w.pages.map(function (r) {
       return { slug: r.slug, score: r.score, impressions: r.metrics.impressions, clicks: r.metrics.clicks,
-               ctr: r.metrics.ctr, position: r.metrics.position, flags: r.flags };
+               ctr: r.metrics.ctr, position: r.metrics.position, flags: r.flags, product_clicks: r.product_clicks };
     }).filter(function (r) { return !state.q || r.slug.indexOf(state.q.toLowerCase()) !== -1; });
     rows = sortRows(rows, "opp", "score", "desc");
     out.push('<div class="tbl-wrap"><table><thead><tr>' + th("opp", "slug", "Page", "", "score", "desc") +
              th("opp", "score", "Score", "num", "score", "desc") + th("opp", "impressions", "Impressions", "num", "score", "desc") +
              th("opp", "clicks", "Clicks", "num", "score", "desc") + th("opp", "ctr", "CTR", "num", "score", "desc") +
-             th("opp", "position", "Position", "num", "score", "desc") + "<th>Flags</th></tr></thead><tbody>");
+             th("opp", "position", "Position", "num", "score", "desc") +
+             (D.affiliate ? th("opp", "product_clicks", "Product clicks", "num", "score", "desc") : "") + "<th>Flags</th></tr></thead><tbody>");
     rows.forEach(function (r) {
       out.push("<tr><td>" + pageLink(r.slug) + '</td><td class="num">' + scoreBadge(r.score) + '</td><td class="num">' + num(r.impressions) +
                '</td><td class="num">' + num(r.clicks) + '</td><td class="num">' + pct(r.ctr) + '</td><td class="num">' + pos(r.position) +
-               "</td><td>" + flags(r.flags) + "</td></tr>");
+               (D.affiliate ? '</td><td class="num">' + num(r.product_clicks) : "") + "</td><td>" + flags(r.flags) + "</td></tr>");
     });
-    if (!rows.length) out.push('<tr><td colspan="7" class="empty">No pages match.</td></tr>');
+    if (!rows.length) out.push('<tr><td colspan="' + (D.affiliate ? 8 : 7) + '" class="empty">No pages match.</td></tr>');
     out.push("</tbody></table></div>");
     if (w.cannibalisation.length) {
       out.push("<h2>Pages sharing searches</h2><ul class=\"plain\">");
@@ -376,7 +407,8 @@ ul.plain { list-style: none; padding: 0; margin: 0; }
     out.push('<div class="grid kpis">');
     [["Score, 28 days", r28 ? scoreBadge(r28.score) : "n/a"], ["Score, 90 days", r90 ? scoreBadge(r90.score) : "n/a"],
      ["Impressions, 90 days", m ? num(m.metrics.impressions) : "n/a"], ["Clicks, 90 days", m ? num(m.metrics.clicks) : "n/a"],
-     ["CTR", m ? pct(m.metrics.ctr) : "n/a"], ["Average position", m ? pos(m.metrics.position) : "n/a"]].forEach(function (t) {
+     ["CTR", m ? pct(m.metrics.ctr) : "n/a"], ["Average position", m ? pos(m.metrics.position) : "n/a"]].concat(
+      pg.affiliate ? [["Product clicks, 28 days", num(pg.affiliate.clicks28)], ["Product clicks, 90 days", num(pg.affiliate.clicks90)]] : []).forEach(function (t) {
       out.push('<div class="card kpi"><div class="label">' + t[0] + '</div><div class="value">' + t[1] + "</div></div>");
     });
     out.push("</div>");
@@ -386,6 +418,18 @@ ul.plain { list-style: none; padding: 0; margin: 0; }
     }
     out.push('<h2>Weekly</h2><div class="grid two">' + chartCard("Impressions", pg.series, "impressions", { bars: true }) +
              chartCard("Average position (higher is better)", pg.series, "position", { invert: true, fmt: pos, color: "#6b4fbb" }) + "</div>");
+    if (pg.affiliate && pg.affiliate.products.length) {
+      var pid = "p-" + slug, ps = sortRows(pg.affiliate.products, pid, "clicks", "desc");
+      out.push("<h2>Product clicks, 90 days</h2>" + '<div class="tbl-wrap"><table><thead><tr>' + th(pid, "product", "Product", "", "clicks", "desc") +
+               th(pid, "asin", "ASIN", "", "clicks", "desc") + th(pid, "clicks", "Clicks", "num", "clicks", "desc") + "</tr></thead><tbody>");
+      ps.forEach(function (x) {
+        out.push("<tr><td>" + esc(x.product) + "</td><td>" + (x.asin ? "<code>" + esc(x.asin) + "</code>" : '<span class="muted">search link</span>') +
+                 '</td><td class="num">' + num(x.clicks) + "</td></tr>");
+      });
+      out.push("</tbody></table></div><p class=\"note\">" + affiliateNote() + "</p>");
+    } else if (pg.affiliate) {
+      out.push('<h2>Product clicks</h2><p class="note">' + (pg.affiliate.clicks90 ? affiliateNote() : "No product button clicks in the last 90 days.") + "</p>");
+    }
     if (pg.audit && pg.audit.issues.length) {
       out.push('<h2>Audit issues</h2><div class="card"><ul class="plain issues">');
       pg.audit.issues.forEach(function (i) {
