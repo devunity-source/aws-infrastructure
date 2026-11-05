@@ -122,7 +122,8 @@ The page makes no external requests. Data is embedded as JSON that can't break o
 Search Console string is escaped when shown, and the inline script is pinned by hash in a CSP meta tag.
 
 The weekly run rebuilds it into `/var/www/html/seo-dashboard/`, and nginx serves it at
-`https://protocloudsolutions.com/seo/` behind a password. One-time setup on the server:
+`https://digitalapricot.io/seo/` (and still `https://protocloudsolutions.com/seo/`) behind a password.
+The `digitalapricot.io` server block includes the snippet. One-time setup on the server:
 
 ```bash
 # Folder the weekly run writes and nginx reads
