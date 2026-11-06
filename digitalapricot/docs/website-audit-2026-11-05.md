@@ -144,3 +144,24 @@ Not part of the presentation. These notes record what the repo shows, so each it
   - A reviewer page at `/reviewers/<slug>` (with ProfilePage and Person markup) is built and goes live once
     `REVIEWER.bio` is filled in. Until then, bylines link to /about.
   - Still open: the Lamzu source (its site rate-limits automated requests), product photos, and the reviewer's details.
+- **Days 15–30 (in progress, 6 November 2026):**
+  - Laptop and dock guides now have comparison tables and source links, and their specs were checked
+    against the makers' pages. Corrections included:
+    - The MacBook Pro 14 now comes with M6, M5 Pro or M5 Max. The M6 has Thunderbolt 4.
+    - The Framework 13 now uses AMD boards only.
+    - The ThinkPad's Linux certification was still pending at review time.
+    - The Plugable has no downstream Thunderbolt ports, does have SD readers, delivers 98 W, and drives two displays at most on Macs.
+    - The TS5 Plus drives three or four displays only on the M5 Pro or M5 Max.
+    - Unsourced "owners report monitors wake reliably" claims were removed.
+  - Homepage:
+    - The hero has one main button.
+    - The category chips were removed, since the header already lists the categories.
+    - Six recently updated guides are shown, three on phones.
+    - "Every guide, by category" lists all guides as compact links, so every guide is still linked from the homepage.
+    - Cards show the update date when there is one.
+  - Tracking:
+    - Every product button carries `data-link` (product, search or retailer).
+    - The Google tag container sends to G-TENDQPP9N8.
+    - Mobile layouts checked at phone width for the homepage and the three upgraded guides.
+  - Still open: sources for the Lamzu and the UGREEN charger (their sites rate-limit automated requests),
+    and a GA4 check that `affiliate_click` and `sign_up` events arrive. That check needs the GA4 UI or the weekly import.
