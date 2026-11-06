@@ -1,5 +1,6 @@
 ---
-import { amazonUrl, productId } from '../lib/site';
+import { existsSync } from 'node:fs';
+import { amazonUrl, productId, url as siteUrl, webpOf } from '../lib/site';
 interface Props {
   name: string;
   pick: string;
@@ -11,9 +12,18 @@ interface Props {
   specs?: string[];
   pros?: string[];
   cons?: string[];
+  /** Where the specs and claims come from. */
+  sources?: { label: string; url: string }[];
+  /** Own or licensed photo under public/. */
+  image?: string;
+  imageAlt?: string;
   index?: number;
+  /** Comparison cells; used by the table at the top, ignored here. */
+  compare?: Record<string, string>;
 }
-const { name, pick, asin, url, store = 'Amazon', specs = [], pros = [], cons = [], index } = Astro.props;
+const { name, pick, asin, url, store = 'Amazon', specs = [], pros = [], cons = [], sources = [], image, imageAlt, index } = Astro.props;
+// Offer a WebP copy only when one sits next to the photo in public/.
+const webp = image && webpOf(image) !== image && existsSync(`public${webpOf(image)}`) ? webpOf(image) : undefined;
 const isAmazon = !url;
 const hasAsin = isAmazon && !!asin && /^[A-Z0-9]{10}$/.test(asin);
 // Sent with the click event: is this a direct product page, an Amazon search, or another store?
@@ -26,6 +36,12 @@ const label = linkType === 'product' ? 'Check price on Amazon' : linkType === 's
 const hint = linkType === 'search' ? `Opens Amazon search results for “${name}”` : undefined;
 ---
 <article class="glass not-prose my-8 rounded-2xl p-5 md:p-6" id={productId(name)} data-pc>
+  {image && (
+    <picture class="mb-5 block">
+      {webp && <source srcset={siteUrl(webp)} type="image/webp" />}
+      <img src={siteUrl(image)} alt={imageAlt ?? name} loading="lazy" width="800" height="500" class="aspect-[8/5] w-full rounded-xl border border-line bg-white object-contain" />
+    </picture>
+  )}
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
       <span class="pc-badge inline-flex items-center gap-1.5 rounded-md bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
@@ -69,6 +85,12 @@ const hint = linkType === 'search' ? `Opens Amazon search results for “${name}
         <ul class="mt-2 space-y-1.5 text-sm text-fg-muted">{cons.map((c) => <li class="flex gap-2"><span class="text-warn">–</span><span>{c}</span></li>)}</ul>
       </div>
     </div>
+  )}
+  {sources.length > 0 && (
+    <p class="mt-5 border-t border-line pt-3 text-xs text-fg-muted">
+      <span class="font-medium">Sources:</span>
+      {sources.map((src, i) => <>{i > 0 && ' · '}<a href={src.url} target="_blank" rel="noopener" class="underline decoration-line underline-offset-2 hover:text-primary">{src.label}</a></>)}
+    </p>
   )}
 </article>
 

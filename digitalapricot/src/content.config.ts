@@ -28,6 +28,13 @@ const posts = defineCollection({
           specs: z.array(z.string()).default([]),
           pros: z.array(z.string()).default([]),
           cons: z.array(z.string()).default([]),
+          // Comparison table cells, in column order. The first product's keys name the columns.
+          compare: z.record(z.string(), z.string()).optional(),
+          // Where the specs and claims come from. Shown on the product card.
+          sources: z.array(z.object({ label: z.string(), url: z.string().url() })).default([]),
+          // Own or licensed product photo, under public/. Never a manufacturer image without permission.
+          image: z.string().optional(),
+          imageAlt: z.string().optional(),
         }),
       )
       .default([]),

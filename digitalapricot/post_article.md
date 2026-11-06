@@ -76,6 +76,18 @@ Each item in `products` takes:
 - `asin` (strongly recommended): Amazon ASIN. With it, the button reads "Check price on Amazon" and links straight to the product. Without it, the button reads "Search on Amazon" and opens a search for the name, which readers trust less and which converts worse. Your affiliate tag is appended either way
 - `url` and `store` (optional): for a product Amazon doesn't sell, set `url` to the retailer's page and `store` to its name. The button then reads "Check price at {store}" and links there without the affiliate tag
 - `specs`, `pros`, `cons` (optional): lists of short strings
+- `compare` (optional): cells for the comparison table at the top of the article, for example
+  `{ "Weight": "60 g", "Connection": "Wireless", "Battery": "Up to 95 h", "Suits": "Most grips" }`.
+  The first product's keys name the columns, in order. When any product has `compare`, the table replaces
+  the "picks at a glance" list. Keep cells short; the table scrolls sideways on phones
+- `sources` (recommended): where the specs and claims come from, shown under the card as
+  `Sources: label · label`. Write each as `{ label: "Logitech specifications", url: "https://..." }`.
+  Prefer the maker's spec page, then an independent review you have actually read. Say "maker's figure"
+  in a spec when you can't confirm it elsewhere, and date anything that changes, such as review counts
+- `image` and `imageAlt` (optional): a product photo under `public/images/products/`, shown at the top
+  of the card. Only your own photos or images you have a licence for. Amazon's product images may only be
+  used through its approved tools, and manufacturers' press images usually need permission. Put a `.webp`
+  copy next to it and the card serves that first
 
 Write the product list once in the frontmatter. Each `<ProductCard index={N} {...frontmatter.products[N]} />` in the body pulls from it, and the glance table at the top of the article is generated from it automatically.
 

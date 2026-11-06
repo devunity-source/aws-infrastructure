@@ -2,6 +2,7 @@
 import type { CollectionEntry } from 'astro:content';
 import Base from './Base.astro';
 import AdSlot from '../components/AdSlot.astro';
+import CompareTable from '../components/CompareTable.astro';
 import PostCard from '../components/PostCard.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Newsletter from '../components/Newsletter.astro';
@@ -14,6 +15,8 @@ const { title, seoTitle, description, pubDate, updatedDate, category, tags, hero
 const toc = headings.filter((h) => h.depth === 2);
 const canonical = absUrl(`/${post.id}`);
 const categoryLabel = CATEGORIES[category].label;
+const hasCompare = products.some((p) => p.compare);
+const reviewerUrl = REVIEWER.bio.length > 0 ? `/reviewers/${REVIEWER.slug}` : '/about';
 
 const jsonLd = [
   {
@@ -29,7 +32,7 @@ const jsonLd = [
     mainEntityOfPage: {
       '@type': 'WebPage',
       '@id': canonical,
-      reviewedBy: { '@type': 'Person', name: REVIEWER.name, image: absUrl(REVIEWER.image), url: absUrl('/about') },
+      reviewedBy: { '@type': 'Person', name: REVIEWER.name, image: absUrl(REVIEWER.image), url: absUrl(reviewerUrl), ...(REVIEWER.jobTitle && { jobTitle: REVIEWER.jobTitle }), ...(REVIEWER.links.length > 0 && { sameAs: REVIEWER.links.map((l) => l.url) }) },
     },
   },
   {
@@ -73,7 +76,7 @@ const jsonLd = [
       <div class="mt-6 flex items-center gap-3 text-sm text-fg-muted">
         <img src={url(REVIEWER.image)} alt="" width="48" height="48" class="h-12 w-12 shrink-0 rounded-full border-2 border-card object-cover shadow-sm" />
         <div class="flex flex-col gap-0.5">
-          <span>Reviewed by <a href={url('/about')} class="font-semibold text-fg hover:text-primary">{REVIEWER.name}</a></span>
+          <span>Reviewed by <a href={url(reviewerUrl)} class="font-semibold text-fg hover:text-primary">{REVIEWER.name}</a></span>
           <span class="flex flex-wrap gap-x-3">
             <span>Published <FormattedDate date={pubDate} /></span>
             {updatedDate && <span>Updated <FormattedDate date={updatedDate} /></span>}
@@ -102,7 +105,9 @@ const jsonLd = [
           </nav>
         )}
 
-        {products.length > 0 && (
+        {hasCompare && <CompareTable products={products} />}
+
+        {products.length > 0 && !hasCompare && (
           <section class="glass mb-10 overflow-hidden rounded-2xl" data-glance>
             <h2 class="border-b border-line px-5 py-3 text-xs font-semibold uppercase tracking-wider text-fg-muted">Our picks at a glance</h2>
             <ul class="divide-y divide-line">
