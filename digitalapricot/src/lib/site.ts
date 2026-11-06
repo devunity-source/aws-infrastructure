@@ -42,7 +42,7 @@ export const ADSENSE = {
 // USERNAME is the Buttondown newsletter username (buttondown.com/<username>). While it is empty the
 // signup box is hidden rather than falling back to a mailto: form.
 export const NEWSLETTER = {
-  BUTTONDOWN_USERNAME: '',
+  BUTTONDOWN_USERNAME: 'rakanmatouq',
 };
 
 // Amazon Associates tracking ID.
