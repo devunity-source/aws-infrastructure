@@ -30,7 +30,8 @@ const hasAsin = isAmazon && !!asin && /^[A-Z0-9]{10}$/.test(asin);
 const linkType = !isAmazon ? 'retailer' : hasAsin ? 'product' : 'search';
 const href = url ?? amazonUrl(asin || name);
 // Amazon links are paid affiliate links; direct retailer links are not.
-const rel = isAmazon ? 'nofollow sponsored noopener' : 'nofollow noopener';
+// A pasted Amazon Associates short link (link.amazon) is an affiliate link too.
+const rel = isAmazon || /^https:\/\/link\.amazon\//.test(url ?? '') ?'nofollow sponsored noopener' : 'nofollow noopener';
 // Say what the button does: a search link must not look like a link to the exact product.
 const label = linkType === 'product' ? 'Check price on Amazon' : linkType === 'search' ? 'Search on Amazon' : `Check price at ${store}`;
 const hint = linkType === 'search' ? `Opens Amazon search results for “${name}”` : undefined;
@@ -89,7 +90,7 @@ const hint = linkType === 'search' ? `Opens Amazon search results for “${name}
   {sources.length > 0 && (
     <p class="mt-5 border-t border-line pt-3 text-xs text-fg-muted">
       <span class="font-medium">Sources:</span>{' '}
-      {sources.map((src, i) => <>{i > 0 && ' · '}<a href={src.url} target="_blank" rel="noopener" class="underline decoration-line underline-offset-2 hover:text-primary">{src.label}</a></>)}
+      {sources.map((src, i) => <>{i > 0 && ' · '}<a href={src.url} target="_blank" rel="noopener nofollow" class="underline decoration-line underline-offset-2 hover:text-primary">{src.label}</a></>)}
     </p>
   )}
 </article>
