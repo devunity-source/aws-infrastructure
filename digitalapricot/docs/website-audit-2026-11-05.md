@@ -134,3 +134,13 @@ Not part of the presentation. These notes record what the repo shows, so each it
   - Search links are labelled "Search on Amazon", with a tooltip naming the search.
   - Search folds plurals and synonyms, requires every word to match, ranks title matches first, and supports `?q=`.
   - Still open: replacing the 14 guides' search links with exact ASINs.
+- **Days 8–14 (in progress, 6 November 2026):**
+  - The mouse guide has a comparison table near the top (weight, connection, buttons, battery, who it suits).
+    It scrolls sideways on phones with the pick column pinned.
+  - Every card except the Lamzu links its sources. Specs were checked against the makers' pages, which corrected
+    several: the Lamzu's 4K dongle is sold separately, the Viper's battery figure only holds at 1,000 Hz, the
+    M612 weighs about 150 g with its cable and uses a PixArt 3104. Undated owner review counts were removed.
+  - Product cards can show a photo (`image`, `imageAlt`), but none are added yet. They need own or licensed photos.
+  - A reviewer page at `/reviewers/<slug>` (with ProfilePage and Person markup) is built and goes live once
+    `REVIEWER.bio` is filled in. Until then, bylines link to /about.
+  - Still open: the Lamzu source (its site rate-limits automated requests), product photos, and the reviewer's details.

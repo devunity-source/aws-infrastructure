@@ -1,0 +1,77 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { REVIEWER, SITE, absUrl, url } from '../../lib/site';
+
+// The page only exists once the bio is filled in, so the site never publishes an empty profile.
+export function getStaticPaths() {
+  return REVIEWER.bio.length > 0 ? [{ params: { slug: REVIEWER.slug } }] : [];
+}
+
+const posts = (await getCollection('posts', ({ data }) => !data.draft))
+  .sort((a, b) => (b.data.updatedDate ?? b.data.pubDate).valueOf() - (a.data.updatedDate ?? a.data.pubDate).valueOf());
+const pageUrl = absUrl(`/reviewers/${REVIEWER.slug}`);
+const description = `${REVIEWER.name}${REVIEWER.jobTitle ? `, ${REVIEWER.jobTitle}` : ''}, reviews every Digital Apricot guide before it goes live.`;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfilePage',
+  url: pageUrl,
+  mainEntity: {
+    '@type': 'Person',
+    name: REVIEWER.name,
+    image: absUrl(REVIEWER.image),
+    url: pageUrl,
+    ...(REVIEWER.jobTitle && { jobTitle: REVIEWER.jobTitle }),
+    ...(REVIEWER.links.length > 0 && { sameAs: REVIEWER.links.map((l) => l.url) }),
+    worksFor: { '@type': 'Organization', name: SITE.name, url: SITE.url },
+  },
+};
+---
+<Base title={`${REVIEWER.name}, reviewer`} description={description} jsonLd={jsonLd}>
+  <article class="mx-auto max-w-3xl px-4 pt-14">
+    <header class="flex flex-wrap items-center gap-6">
+      <img src={url(REVIEWER.image)} alt={`Photo of ${REVIEWER.name}`} width="112" height="112" class="h-28 w-28 rounded-full border-2 border-card object-cover shadow-sm" />
+      <div>
+        <h1 class="text-4xl font-semibold tracking-tight md:text-5xl">{REVIEWER.name}</h1>
+        {REVIEWER.jobTitle && <p class="mt-2 text-lg text-fg-muted">{REVIEWER.jobTitle}</p>}
+        {REVIEWER.links.length > 0 && (
+          <ul class="mt-3 flex flex-wrap gap-3 text-sm">
+            {REVIEWER.links.map((l) => <li><a href={l.url} rel="me noopener" target="_blank" class="text-primary hover:underline">{l.label}</a></li>)}
+          </ul>
+        )}
+      </div>
+    </header>
+
+    <div class="prose-pc mt-10">
+      {REVIEWER.bio.map((p) => <p>{p}</p>)}
+
+      {REVIEWER.experience.length > 0 && (
+        <>
+          <h2>Experience</h2>
+          <ul>{REVIEWER.experience.map((e) => <li><strong>{e.role}</strong>, {e.org} ({e.years})</li>)}</ul>
+        </>
+      )}
+
+      {REVIEWER.credentials.length > 0 && (
+        <>
+          <h2>Credentials</h2>
+          <ul>{REVIEWER.credentials.map((c) => <li>{c}</li>)}</ul>
+        </>
+      )}
+
+      {REVIEWER.owns.length > 0 && (
+        <>
+          <h2>What I use every day</h2>
+          <p>Equipment I own and work with. Guides say when a pick is one of these; everything else is research.</p>
+          <ul>{REVIEWER.owns.map((o) => <li>{o}</li>)}</ul>
+        </>
+      )}
+
+      <h2>How I review</h2>
+      <p>I check every guide before it goes live: that specs match the manufacturer's published figures, that claims link to their sources, and that research-based picks are not presented as hands-on testing. More on the process on the <a href={url('/about')}>about page</a>.</p>
+
+      <h2>Guides I have reviewed</h2>
+      <ul>{posts.map((p) => <li><a href={url(`/${p.id}`)}>{p.data.title}</a></li>)}</ul>
+    </div>
+  </article>
+</Base>

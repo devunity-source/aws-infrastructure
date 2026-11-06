@@ -18,9 +18,28 @@ export const SITE = {
 };
 
 // Every guide is reviewed by this person before it goes live (shown in the post header and JSON-LD).
-export const REVIEWER = {
+// Fill in bio to publish the reviewer page at /reviewers/<slug>; until then bylines link to /about.
+// Only verifiable facts: roles, years, certifications, public profiles. The audit asks for a detailed bio.
+export const REVIEWER: {
+  name: string;
+  slug: string;
+  image: string;
+  jobTitle: string;
+  bio: string[]; // paragraphs
+  experience: { role: string; org: string; years: string }[];
+  credentials: string[];
+  owns: string[]; // equipment the reviewer uses day to day, for "what I actually use"
+  links: { label: string; url: string }[]; // LinkedIn, GitHub, etc. Also used as schema.org sameAs.
+} = {
   name: 'Rakan Khaled',
+  slug: 'rakan-khaled',
   image: '/images/rakan-khaled.jpg',
+  jobTitle: '',
+  bio: [],
+  experience: [],
+  credentials: [],
+  owns: [],
+  links: [],
 };
 
 // Google AdSense. CLIENT must match the ID in public/ads.txt. Set ENABLED to false to ship an ad-free build.
