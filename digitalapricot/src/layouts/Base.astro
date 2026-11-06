@@ -3,7 +3,7 @@ import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import KeyboardRow from '../components/KeyboardRow.astro';
-import { ADSENSE, ANALYTICS, SITE, absUrl, url } from '../lib/site';
+import { ADSENSE, ANALYTICS, CONSENT_REGIONS, SITE, absUrl, url } from '../lib/site';
 
 interface Props {
   title: string;
@@ -65,6 +65,15 @@ const adsConfigured = ADSENSE.ENABLED && /^ca-pub-\d{16}$/.test(ADSENSE.CLIENT);
 
     {ANALYTICS.GOOGLE_TAG_ID && (
       <>
+        {/* Consent Mode v2 defaults, set before the Google tag loads. In the EEA, UK and Switzerland, ads and
+            analytics storage stay denied until the visitor answers Google's consent message (the certified CMP
+            configured in AdSense > Privacy & messaging), which then updates these signals. Elsewhere they're granted. */}
+        <script is:inline define:vars={{ regions: CONSENT_REGIONS }}>
+          window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}
+          gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', analytics_storage: 'denied', region: regions, wait_for_update: 500 });
+          gtag('consent', 'default', { ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted', analytics_storage: 'granted' });
+          gtag('set', 'ads_data_redaction', true);
+        </script>
         {/* The site's Google tag. Its configuration (GA4 property, enhanced measurement) lives in Google, not here. */}
         <script is:inline async src={`https://www.googletagmanager.com/gtm.js?id=${ANALYTICS.GOOGLE_TAG_ID}`}></script>
         <script is:inline define:vars={{ ga4: ANALYTICS.GA4_ID, group: contentGroup }}>

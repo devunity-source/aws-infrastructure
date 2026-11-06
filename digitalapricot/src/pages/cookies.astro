@@ -1,0 +1,33 @@
+---
+import Page from '../layouts/Page.astro';
+import ConsentButton from '../components/ConsentButton.astro';
+import { SITE, url } from '../lib/site';
+const updated = 'November 6, 2026';
+---
+<Page title="Cookies and consent" description={`Which cookies Digital Apricot uses, why, and how to change your choice. Last updated ${updated}.`}>
+  <p>This page explains the cookies set when you visit {SITE.url} and how your consent works. The full picture of what data is collected is in our <a href={url('/privacy')}>privacy policy</a>.</p>
+
+  <h2>Your choice</h2>
+  <p>If you visit from the European Economic Area, the UK or Switzerland, Google shows a consent message on your first visit. Until you answer it, Google's advertising and analytics cookies are not set: ads that load are non-personalised, and analytics only receives cookieless signals. If you agree, personalised ads and analytics cookies are allowed. If you decline, they stay off. You can change your mind at any time:</p>
+  <p class="not-prose"><ConsentButton class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-fg hover:bg-primary/90" /></p>
+  <p>Outside those regions, cookies are allowed by default. You can block or delete them in your browser settings, and opt out of personalised ads at <a href="https://www.google.com/settings/ads" rel="noopener">Google Ads Settings</a>.</p>
+
+  <h2>The cookies we use</h2>
+  <p>We set no cookies of our own. All of the cookies below are set by Google.</p>
+  <h3>Consent</h3>
+  <p>Google's consent message stores your answer so it isn't asked again on every page. This is necessary for the consent to work and is set only where the message is shown.</p>
+  <h3>Analytics (Google Analytics 4)</h3>
+  <p>Cookies named <code>_ga</code> and <code>_ga_*</code> tell visits apart, so we can count readers, see which guides they read and which product buttons they click. <code>_ga</code> lasts up to two years. Nothing that identifies you, such as your name or email address, is sent.</p>
+  <h3>Advertising (Google AdSense)</h3>
+  <p>Google and its partners use cookies, including the DoubleClick cookie and AdSense cookies such as <code>__gads</code> and <code>__gpi</code>, to show ads, limit how often you see them, measure them and, with your consent, personalise them. See <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">how Google uses information from sites that use its services</a>.</p>
+
+  <h2>Not cookies, but worth knowing</h2>
+  <ul>
+    <li><strong>Amazon links</strong> carry our affiliate tag in the URL. Amazon's own cookies apply once you are on Amazon.</li>
+    <li><strong>The newsletter</strong> form sends your email address to Buttondown only when you submit it.</li>
+    <li><strong>Fonts</strong> load from Google Fonts, which receives your IP address to serve them but sets no cookies.</li>
+  </ul>
+
+  <h2>Questions</h2>
+  <p>Email <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
+</Page>

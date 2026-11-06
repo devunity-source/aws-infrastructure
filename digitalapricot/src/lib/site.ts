@@ -125,3 +125,10 @@ export function amazonUrl(asinOrSearch: string): string {
   }
   return `https://www.amazon.com/s?k=${encodeURIComponent(asinOrSearch)}&tag=${AFFILIATE.AMAZON_TAG}`;
 }
+
+// Where Google requires consent before ads and analytics cookies (EEA, UK, Switzerland). Visitors from these
+// regions start with Consent Mode signals denied until they answer Google's consent message.
+export const CONSENT_REGIONS = [
+  'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU',
+  'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'GB', 'CH',
+];
