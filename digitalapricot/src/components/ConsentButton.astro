@@ -1,0 +1,22 @@
+---
+// Reopens Google's consent message (the CMP set up in AdSense > Privacy & messaging) so a visitor can change
+// their choice. Google's CMP only loads where a message applies, so elsewhere the button says so instead.
+interface Props { class?: string; label?: string }
+const { class: cls = '', label = 'Change cookie settings' } = Astro.props;
+---
+<button type="button" data-consent-open class={cls}>{label}</button>
+<span data-consent-note class="ml-2 text-xs text-fg-muted" hidden>No consent message applies in your region. You can still block cookies in your browser.</span>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-consent-open]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const w = window as unknown as { googlefc?: { callbackQueue: unknown[]; showRevocationMessage: () => void } };
+      if (w.googlefc?.showRevocationMessage) {
+        w.googlefc.callbackQueue.push(w.googlefc.showRevocationMessage);
+      } else {
+        const note = btn.nextElementSibling as HTMLElement | null;
+        if (note?.hasAttribute('data-consent-note')) note.hidden = false;
+      }
+    });
+  });
+</script>

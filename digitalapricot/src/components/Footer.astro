@@ -1,5 +1,6 @@
 ---
 import Logo from './Logo.astro';
+import ConsentButton from './ConsentButton.astro';
 import { CATEGORIES, SITE, url } from '../lib/site';
 const year = new Date().getFullYear();
 ---
@@ -28,6 +29,8 @@ const year = new Date().getFullYear();
         <li><a href={url('/contact')} class="text-fg-muted hover:text-fg">Contact</a></li>
         <li><a href={url('/privacy')} class="text-fg-muted hover:text-fg">Privacy policy</a></li>
         <li><a href={url('/disclosure')} class="text-fg-muted hover:text-fg">Affiliate disclosure</a></li>
+        <li><a href={url('/cookies')} class="text-fg-muted hover:text-fg">Cookies and consent</a></li>
+        <li><ConsentButton class="text-left text-fg-muted hover:text-fg" label="Cookie settings" /></li>
       </ul>
     </div>
   </div>
