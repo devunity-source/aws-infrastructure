@@ -19,6 +19,8 @@ fi
 npm ci
 npm run build
 
-ssh "${SSH_OPTS[@]}" "$DEPLOY_HOST" "sudo mkdir -p '$DEPLOY_PATH' && sudo chown -R \$(id -un) '$DEPLOY_PATH'"
-rsync -az --delete -e "ssh ${SSH_OPTS[*]}" dist/ "$DEPLOY_HOST:$DEPLOY_PATH/"
+Q_PATH=$(printf '%q' "$DEPLOY_PATH")
+ssh "${SSH_OPTS[@]}" -- "$DEPLOY_HOST" "sudo mkdir -p $Q_PATH && sudo chown -R \$(id -un) $Q_PATH"
+RSYNC_SSH=$(printf '%q ' ssh "${SSH_OPTS[@]}")
+rsync -az --delete -e "$RSYNC_SSH" dist/ "$DEPLOY_HOST:$DEPLOY_PATH/"
 echo "deployed to $DEPLOY_HOST:$DEPLOY_PATH"

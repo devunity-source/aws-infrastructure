@@ -6,18 +6,24 @@ on:
     paths: ['digitalapricot/**']
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: deploy-digitalapricot
-  cancel-in-progress: true
+  cancel-in-progress: false  # never kill an rsync --delete half way
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: digitalapricot
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
@@ -32,8 +38,11 @@ jobs:
       # Deploy only when the server secrets exist. Until then the job just proves the build.
       - name: Check deploy secrets
         id: secrets
+        env:
+          DEPLOY_HOST: ${{ secrets.BLOG_DEPLOY_HOST }}
+          DEPLOY_KEY: ${{ secrets.BLOG_DEPLOY_SSH_KEY }}
         run: |
-          if [ -n "${{ secrets.BLOG_DEPLOY_HOST }}" ] && [ -n "${{ secrets.BLOG_DEPLOY_SSH_KEY }}" ]; then
+          if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_KEY" ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
@@ -42,19 +51,26 @@ jobs:
 
       - name: Install SSH key
         if: steps.secrets.outputs.ready == 'true'
+        env:
+          DEPLOY_HOST: ${{ secrets.BLOG_DEPLOY_HOST }}
+          DEPLOY_KEY: ${{ secrets.BLOG_DEPLOY_SSH_KEY }}
         run: |
+          umask 077
           mkdir -p ~/.ssh
-          echo "${{ secrets.BLOG_DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           # Pinned host key (SHA256:MPquXpviMzx/HsbOayqOqtdAoCWULx9T3z+5ESrOweY), so a
           # spoofed server can't receive the deploy. Update it if the server is rebuilt.
-          echo "${{ secrets.BLOG_DEPLOY_HOST }} ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGbJFPmYld0xQI0apA9QzTSZeR50pjutgrAruC3x7MgC" >> ~/.ssh/known_hosts
+          echo "$DEPLOY_HOST ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGbJFPmYld0xQI0apA9QzTSZeR50pjutgrAruC3x7MgC" >> ~/.ssh/known_hosts
 
       - name: Rsync to server
         if: steps.secrets.outputs.ready == 'true'
+        env:
+          DEPLOY_USER: ${{ secrets.BLOG_DEPLOY_USER }}
+          DEPLOY_HOST: ${{ secrets.BLOG_DEPLOY_HOST }}
         run: |
           # The deploy key is locked on the server to `rrsync -wo /var/www/html/digitalapricot`, which
           # treats every path as relative to that folder. ./ is the blog folder itself.
           # An absolute path would land in a nested <blog folder>/var/www/... instead.
           rsync -az --delete -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes" dist/ \
-            "${{ secrets.BLOG_DEPLOY_USER }}@${{ secrets.BLOG_DEPLOY_HOST }}:./"
+            "${DEPLOY_USER}@${DEPLOY_HOST}:./"
